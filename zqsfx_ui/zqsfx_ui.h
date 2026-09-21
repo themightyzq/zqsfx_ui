@@ -6,7 +6,7 @@
 
   ID:                 zqsfx_ui
   vendor:             ZQ SFX
-  version:            0.2.0
+  version:            0.2.1
   name:               ZQ SFX shared UI
   description:        Shared design-system UI tokens, LookAndFeel, and controls for
                        every ZQ SFX JUCE product.

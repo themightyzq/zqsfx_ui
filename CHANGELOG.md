@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Versioning is semver; token
 values only change in a major version (see README.md "Versioning").
 
+## [0.2.1] - 2026-09-21
+
+### Changed
+- `strip_a` (large dials) now carries a painted cream pointer. The design's own pointer is a
+  small dark tick that was close to unreadable on a product's main controls. The as-designed
+  strip is kept in `assets/knobs/rendered/` and restoring it is a one-file copy.
+
+### Added
+- `tools/paint_knob_pointer.py`.
+
 ## [0.2.0] - 2026-09-21
 
 ### Added

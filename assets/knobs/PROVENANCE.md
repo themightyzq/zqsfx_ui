@@ -38,3 +38,20 @@ size it looked much smaller. `strip_c.png` is therefore the 120 px render croppe
     python3 tools/normalise_knob_strip.py assets/knobs/rendered/strip_c_2075_120px_270deg.png assets/knobs/strip_c.png 80 5
 
 The untouched 120 px render is kept in `rendered/`.
+
+## Making `strip_a`'s pointer readable
+
+#2638's own pointer is a small dark tick on the rim of a bright metal cap. On the large dials it
+is used for (a product's main controls) the setting was close to unreadable, which fails the
+house legibility floor. Its colour is baked into the layer and would not change in WebKnobMan,
+so the pointer is painted on instead:
+
+1. Rendered at native 95 px, 128 frames, with Layer2 (the pointer) set to sweep -135 to +135
+   (the design uses -130 to +130) so the painted line and the design's tick coincide. That
+   render is `rendered/strip_a_2638_95px_270deg_longtick.png`.
+2. `python3 tools/paint_knob_pointer.py rendered/strip_a_2638_95px_270deg_longtick.png strip_a.png 9 27 3.2`
+   paints a cream (`#DED6C2`, the `pointer` token) line from radius 9 to 27 px, 3.2 px wide,
+   with a soft dark keyline, on every frame.
+
+To go back to the knob exactly as its author drew it, copy
+`rendered/strip_a_2638_95px_as_designed.png` over `strip_a.png`.
