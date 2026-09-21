@@ -30,7 +30,7 @@ FetchContent_MakeAvailable (JUCE)
 
 FetchContent_Declare (zqsfx_ui
     GIT_REPOSITORY https://github.com/themightyzq/zqsfx_ui.git
-    GIT_TAG v0.1.1
+    GIT_TAG v0.2.0
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable (zqsfx_ui)
 
@@ -77,17 +77,23 @@ MyEditor::~MyEditor()
 
 ## Knobs
 
-**The house knob is the filmstrip art Broken uses** (Analog Knob Kit 01 by Julian Behrens /
-Noisehead, [vst-design.com](https://www.vst-design.com)). Its licence allows use and
-modification inside commercial and non-commercial plugin projects, requires a credit in open
-source projects, and forbids resale or **redistributing the images as a standalone design
-resource**. A public UI library is exactly that, so **this repository does not contain the
-strips.** Each product carries its own copy:
+**The house knobs ship with the module and load by default.** They are three CC0 (public domain)
+filmstrips from the [KnobGallery](https://www.g200kg.com/en/webknobman/gallery.php), 128 frames
+each, chosen by dial size:
 
-1. Put `strip_a.png`, `strip_b.png`, `strip_c.png` and `LICENSE-Noisehead-KnobKit.txt` in the
-   product's `assets/knobs/`.
-2. Credit Julian Behrens in the product's README and About box.
-3. Embed and hand them over:
+| Dial | Strip | Look | Gallery entry |
+|---|---|---|---|
+| 56 px and up | `strip_a` | silver cap in a black lobed skirt | #2638, SolurOathLabs |
+| 42 px and up | `strip_b` | black, white pointer | #2410, dh96 |
+| under 42 px | `strip_c` | brushed silver cap | #2075, C. Anders |
+
+Full provenance, the unmodified `.knob` sources, and the exact render steps are in
+`assets/knobs/` (`PROVENANCE.md`). Because they are CC0, there is nothing for a product to copy,
+credit, or licence. They add about 2.6 MB to a binary.
+
+A product with **its own knob art** replaces them. Broken does this: its Noisehead strips are
+licensed for use inside plugin projects but may not be redistributed as a standalone resource,
+so they stay in Broken's repository.
 
 ```cmake
 zqsfx_ui_add_knob_strips (DIR assets/knobs TARGETS MyPlugin)   # after FetchContent_MakeAvailable (zqsfx_ui)
@@ -102,12 +108,8 @@ lookAndFeel.setKnobStripsFromMemory (ZqsfxKnobStrips::strip_a_png, ZqsfxKnobStri
 knob.slider.getProperties().set ("zqsfxStrip", "xl"); // "xl" / "m" / "s"
 ```
 
-Strip choice is by dial size: 56 px and up uses `strip_a` (scalloped), 42 px and up `strip_b`
-(stripe), smaller `strip_c` (metal cap). The three strips total about 6.9 MB per binary; a
-product that only uses small dials can pass an empty `juce::Image` for the sizes it never draws.
-
-Without strips the LookAndFeel falls back to a plain **vector knob**, so a control is never
-invisible. The gallery in this repository shows that fallback, because the art cannot live here.
+If a strip image ever fails to load, the LookAndFeel draws a plain vector knob instead, so a
+control is never invisible.
 
 Section titles on `Panel` are drawn in the platform bold face, wide-tracked (the house
 decision, and how Broken has always looked); labels and buttons use Barlow Condensed.

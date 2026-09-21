@@ -16,7 +16,7 @@ if (APPLE AND (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR))
     endif()
 endif()
 
-project (zqsfx_ui VERSION 0.1.1 LANGUAGES C CXX)
+project (zqsfx_ui VERSION 0.2.0 LANGUAGES C CXX)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -46,7 +46,11 @@ juce_add_binary_data (zqsfx_ui_assets HEADER_NAME ZqsfxUiAssets.h NAMESPACE Zqsf
     "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/BarlowCondensed-Medium.ttf"
     "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/BarlowCondensed-SemiBold.ttf"
     "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/VT323-Regular.ttf"
-    "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/IBMPlexMono-Regular.ttf")
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/fonts/IBMPlexMono-Regular.ttf"
+    # the house knobs: CC0 filmstrips, 128 frames each (see assets/knobs/PROVENANCE.md)
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/knobs/strip_a.png"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/knobs/strip_b.png"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/knobs/strip_c.png")
 set_target_properties (zqsfx_ui_assets PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Consumers get fonts with no extra step: linking zqsfx_ui (by any of its names) pulls
@@ -58,8 +62,9 @@ target_link_libraries (zqsfx_ui INTERFACE zqsfx_ui_assets)
 # clash with a product that sets JUCE_WEB_BROWSER / JUCE_USE_CURL differently or has its own
 # warning policy. The demo targets below set what they need for themselves.
 
-# The house knob art is licensed per product and may not live in this repository (see
-# README "Knobs"). This helper embeds a product's own copy of the three strips and links it:
+# The house knobs ship inside this module (CC0). A product that wants its OWN knob art instead
+# (Broken keeps its licensed Noisehead strips, which may not be redistributed from here) embeds
+# its copy with this helper and hands it to LookAndFeel::setKnobStripsFromMemory():
 #
 #   zqsfx_ui_add_knob_strips (DIR assets/knobs TARGETS MyPlugin MyTests)
 #

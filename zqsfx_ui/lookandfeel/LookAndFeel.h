@@ -3,12 +3,12 @@
 //
 // Origin: ported from Broken's (Project_TurboSynth) TsLookAndFeel.h, which paired a
 // filmstrip-image rotary knob with the same LCD/silkscreen/button treatment kept here.
-// THE HOUSE KNOB is the filmstrip art Broken uses (Analog Knob Kit 01 by Julian Behrens /
-// Noisehead). Its licence allows use inside plugin projects but forbids redistributing the
-// images as a standalone design resource, so this public module does NOT contain them: each
-// product embeds its own copy (with the licence file and a credit) and hands the strips over
-// with setKnobStrips() / setKnobStripsFromMemory(). Without strips the module falls back to a
-// vector knob (drawVectorKnob) so nothing is ever invisible.
+// THE HOUSE KNOBS are three CC0 filmstrips embedded in this module (assets/knobs/, provenance in
+// PROVENANCE.md): silver cap in a black lobed skirt for dials 56 px and up, black with a white
+// pointer for 42 px and up, brushed silver cap below that. They load by default. A product with
+// its own art (Broken keeps its licensed Noisehead strips) replaces them with setKnobStrips() /
+// setKnobStripsFromMemory(). If an image ever fails to load, drawVectorKnob is the fallback, so a
+// control is never invisible.
 // Keyboard focus is drawn via createFocusOutlineForComponent (ported from Unravel's
 // CustomLookAndFeel), not by hand in each draw call, per the accessibility floor in
 // docs/ZQSFX_UI_STYLE_GUIDE.md section 8.

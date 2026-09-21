@@ -3,6 +3,21 @@
 All notable changes to this project are documented here. Versioning is semver; token
 values only change in a major version (see README.md "Versioning").
 
+## [0.2.0] - 2026-09-21
+
+### Added
+- **House knobs embedded and on by default**: three CC0 filmstrips from the KnobGallery
+  (#2638 for dials 56 px and up, #2410 for 42 px and up, #2075 below), 128 frames each, with
+  provenance, unmodified `.knob` sources, and render steps in `assets/knobs/`. No per-product
+  copy, credit, or licence needed.
+- `tools/normalise_knob_strip.py` (crop a strip to a centred frame with a feathered edge).
+
+### Changed
+- Visible change for any consumer that did not call `setKnobStrips`: knobs are now the house
+  filmstrips instead of the vector knob, which remains as the load-failure fallback.
+- #2075 was rendered with a 270 degree sweep (its source animates a full turn, so minimum and
+  maximum looked identical) and cropped from 120 to 80 px so it matches the other two in scale.
+
 ## [0.1.1] - 2026-09-21
 
 Owner decisions after reviewing the gallery.

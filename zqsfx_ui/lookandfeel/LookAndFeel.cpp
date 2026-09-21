@@ -10,6 +10,11 @@ LookAndFeel::LookAndFeel()
     lcd      = load (ZqsfxUiAssets::VT323Regular_ttf,            ZqsfxUiAssets::VT323Regular_ttfSize);
     stamp    = load (ZqsfxUiAssets::IBMPlexMonoRegular_ttf,      ZqsfxUiAssets::IBMPlexMonoRegular_ttfSize);
 
+    // the house knobs (CC0, assets/knobs/PROVENANCE.md); a product may replace them with setKnobStrips
+    setKnobStripsFromMemory (ZqsfxUiAssets::strip_a_png, ZqsfxUiAssets::strip_a_pngSize,
+                             ZqsfxUiAssets::strip_b_png, ZqsfxUiAssets::strip_b_pngSize,
+                             ZqsfxUiAssets::strip_c_png, ZqsfxUiAssets::strip_c_pngSize);
+
     setColour (juce::ResizableWindow::backgroundColourId, colour::chassisMid);
     setColour (juce::Label::textColourId, colour::silkLabel);
 
