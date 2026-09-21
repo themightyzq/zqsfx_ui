@@ -3,6 +3,23 @@
 All notable changes to this project are documented here. Versioning is semver; token
 values only change in a major version (see README.md "Versioning").
 
+## [0.1.1] - 2026-09-21
+
+Owner decisions after reviewing the gallery.
+
+### Changed
+- `Panel` section titles are drawn in the platform bold face (as Broken's `Block` always
+  did), no longer in Barlow Condensed. This is a visible change for anything that used
+  `Panel` in 0.1.0; nothing had shipped on it.
+- The house knob is the filmstrip art Broken uses. It cannot be redistributed from a public
+  library (see README "Knobs"), so products embed their own copy. The vector knob is now
+  documented as the fallback, not the default look.
+
+### Added
+- CMake `zqsfx_ui_add_knob_strips (DIR <dir> TARGETS <t>...)` embeds a product's strips as
+  `ZqsfxKnobStrips.h`.
+- `LookAndFeel::setKnobStripsFromMemory (...)`.
+
 ## [0.1.0] - 2026-09-21
 
 Initial extraction of the shared ZQ SFX UI module from Broken (Project_TurboSynth),

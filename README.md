@@ -30,7 +30,7 @@ FetchContent_MakeAvailable (JUCE)
 
 FetchContent_Declare (zqsfx_ui
     GIT_REPOSITORY https://github.com/themightyzq/zqsfx_ui.git
-    GIT_TAG v0.1.0
+    GIT_TAG v0.1.1
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable (zqsfx_ui)
 
@@ -75,14 +75,42 @@ MyEditor::~MyEditor()
 }
 ```
 
-A product that keeps its own licensed knob art (as Broken does) opts back into
-filmstrip knobs instead of the shared vector knob:
+## Knobs
+
+**The house knob is the filmstrip art Broken uses** (Analog Knob Kit 01 by Julian Behrens /
+Noisehead, [vst-design.com](https://www.vst-design.com)). Its licence allows use and
+modification inside commercial and non-commercial plugin projects, requires a credit in open
+source projects, and forbids resale or **redistributing the images as a standalone design
+resource**. A public UI library is exactly that, so **this repository does not contain the
+strips.** Each product carries its own copy:
+
+1. Put `strip_a.png`, `strip_b.png`, `strip_c.png` and `LICENSE-Noisehead-KnobKit.txt` in the
+   product's `assets/knobs/`.
+2. Credit Julian Behrens in the product's README and About box.
+3. Embed and hand them over:
+
+```cmake
+zqsfx_ui_add_knob_strips (DIR assets/knobs TARGETS MyPlugin)   # after FetchContent_MakeAvailable (zqsfx_ui)
+```
 
 ```cpp
-lookAndFeel.setKnobStrips (myXlStripImage, myMStripImage, mySStripImage);
+#include "ZqsfxKnobStrips.h"
+lookAndFeel.setKnobStripsFromMemory (ZqsfxKnobStrips::strip_a_png, ZqsfxKnobStrips::strip_a_pngSize,
+                                     ZqsfxKnobStrips::strip_b_png, ZqsfxKnobStrips::strip_b_pngSize,
+                                     ZqsfxKnobStrips::strip_c_png, ZqsfxKnobStrips::strip_c_pngSize);
 // per-slider override, if a knob needs a specific strip regardless of its size:
 knob.slider.getProperties().set ("zqsfxStrip", "xl"); // "xl" / "m" / "s"
 ```
+
+Strip choice is by dial size: 56 px and up uses `strip_a` (scalloped), 42 px and up `strip_b`
+(stripe), smaller `strip_c` (metal cap). The three strips total about 6.9 MB per binary; a
+product that only uses small dials can pass an empty `juce::Image` for the sizes it never draws.
+
+Without strips the LookAndFeel falls back to a plain **vector knob**, so a control is never
+invisible. The gallery in this repository shows that fallback, because the art cannot live here.
+
+Section titles on `Panel` are drawn in the platform bold face, wide-tracked (the house
+decision, and how Broken has always looked); labels and buttons use Barlow Condensed.
 
 ## Tokens
 

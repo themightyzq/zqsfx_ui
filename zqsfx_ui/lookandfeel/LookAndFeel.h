@@ -3,8 +3,12 @@
 //
 // Origin: ported from Broken's (Project_TurboSynth) TsLookAndFeel.h, which paired a
 // filmstrip-image rotary knob with the same LCD/silkscreen/button treatment kept here.
-// This module draws knobs in VECTOR by default (see drawVectorKnob) instead of the
-// filmstrip art, which stays a Broken-only, product-level override via setKnobStrips().
+// THE HOUSE KNOB is the filmstrip art Broken uses (Analog Knob Kit 01 by Julian Behrens /
+// Noisehead). Its licence allows use inside plugin projects but forbids redistributing the
+// images as a standalone design resource, so this public module does NOT contain them: each
+// product embeds its own copy (with the licence file and a credit) and hands the strips over
+// with setKnobStrips() / setKnobStripsFromMemory(). Without strips the module falls back to a
+// vector knob (drawVectorKnob) so nothing is ever invisible.
 // Keyboard focus is drawn via createFocusOutlineForComponent (ported from Unravel's
 // CustomLookAndFeel), not by hand in each draw call, per the accessibility floor in
 // docs/ZQSFX_UI_STYLE_GUIDE.md section 8.
@@ -45,6 +49,15 @@ public:
     // strip, drawRotarySlider blits that filmstrip frame exactly as Broken did;
     // otherwise it falls back to drawVectorKnob.
     void setKnobStrips (juce::Image xl, juce::Image m, juce::Image s);
+
+    // Same, straight from binary data (what zqsfx_ui_add_knob_strips() in CMake generates):
+    //   lnf.setKnobStripsFromMemory (ZqsfxKnobStrips::strip_a_png, ZqsfxKnobStrips::strip_a_pngSize, ...b..., ...c...);
+    void setKnobStripsFromMemory (const void* xl, int xlSize, const void* m, int mSize, const void* s, int sSize)
+    {
+        setKnobStrips (juce::ImageCache::getFromMemory (xl, xlSize),
+                       juce::ImageCache::getFromMemory (m, mSize),
+                       juce::ImageCache::getFromMemory (s, sSize));
+    }
 
     // Printed tick ring AROUND a knob (silkscreen on the panel, not on the knob).
     // Kept here so ring and knob agree; called from Knob::paint with the dial square.

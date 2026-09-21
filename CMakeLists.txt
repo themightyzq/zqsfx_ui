@@ -16,7 +16,7 @@ if (APPLE AND (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR))
     endif()
 endif()
 
-project (zqsfx_ui VERSION 0.1.0 LANGUAGES C CXX)
+project (zqsfx_ui VERSION 0.1.1 LANGUAGES C CXX)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -57,6 +57,34 @@ target_link_libraries (zqsfx_ui INTERFACE zqsfx_ui_assets)
 # INTERFACE target, so anything set here is forced onto every product that links it and would
 # clash with a product that sets JUCE_WEB_BROWSER / JUCE_USE_CURL differently or has its own
 # warning policy. The demo targets below set what they need for themselves.
+
+# The house knob art is licensed per product and may not live in this repository (see
+# README "Knobs"). This helper embeds a product's own copy of the three strips and links it:
+#
+#   zqsfx_ui_add_knob_strips (DIR assets/knobs TARGETS MyPlugin MyTests)
+#
+# expects DIR/strip_a.png (>= 56 px dials), strip_b.png (>= 42 px), strip_c.png (smaller), and
+# generates the header ZqsfxKnobStrips.h in namespace ZqsfxKnobStrips.
+function (zqsfx_ui_add_knob_strips)
+    cmake_parse_arguments (ZKS "" "DIR" "TARGETS" ${ARGN})
+    if (NOT ZKS_DIR OR NOT ZKS_TARGETS)
+        message (FATAL_ERROR "zqsfx_ui_add_knob_strips: DIR and TARGETS are required")
+    endif()
+    get_filename_component (zks_dir "${ZKS_DIR}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+    foreach (strip strip_a.png strip_b.png strip_c.png)
+        if (NOT EXISTS "${zks_dir}/${strip}")
+            message (FATAL_ERROR "zqsfx_ui_add_knob_strips: missing ${zks_dir}/${strip}")
+        endif()
+    endforeach()
+    if (NOT TARGET ZqsfxKnobStrips)
+        juce_add_binary_data (ZqsfxKnobStrips HEADER_NAME ZqsfxKnobStrips.h NAMESPACE ZqsfxKnobStrips SOURCES
+            "${zks_dir}/strip_a.png" "${zks_dir}/strip_b.png" "${zks_dir}/strip_c.png")
+        set_target_properties (ZqsfxKnobStrips PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    endif()
+    foreach (t ${ZKS_TARGETS})
+        target_link_libraries (${t} PRIVATE ZqsfxKnobStrips)
+    endforeach()
+endfunction()
 
 # ON when this is the top-level build (developing the module itself), OFF when a
 # product FetchContent's this in as a dependency, so a product's own build does not

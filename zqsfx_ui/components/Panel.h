@@ -2,9 +2,9 @@
 // Titled rack panel: gradient face, hard border, silk title with a hairline rule.
 //
 // Origin: Broken's (Project_TurboSynth) Theme.h "Block" component, renamed for the
-// shared module. Paint is identical; the only change is that the title font is taken
-// from the active LookAndFeel when it is a zqsfx::ui::LookAndFeel, so the panel picks
-// up the shared silkscreen typeface instead of a fallback system font.
+// shared module. Paint is identical, including the title face: section titles are drawn in
+// the PLATFORM BOLD font, wide-tracked, not in Barlow Condensed. That is the owner's house
+// decision (2026-09-21): it is how Broken has always looked, and it stays.
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../lookandfeel/LookAndFeel.h"
@@ -33,10 +33,7 @@ public:
         auto head = getLocalBounds().reduced (8, 0).removeFromTop (20);
         g.setColour (colour::silkTitle);
 
-        if (auto* lnf = dynamic_cast<LookAndFeel*> (&getLookAndFeel()))
-            g.setFont (lnf->silkFont (14.0f, true).withExtraKerningFactor (0.27f));
-        else
-            g.setFont (juce::Font (juce::FontOptions (14.0f, juce::Font::bold)).withExtraKerningFactor (0.27f));
+        g.setFont (juce::Font (juce::FontOptions (14.0f, juce::Font::bold)).withExtraKerningFactor (0.27f));
 
         g.drawText (title.toUpperCase(), head.translated (0, 4), juce::Justification::centredLeft);
         g.setColour (colour::ruleTitle);
