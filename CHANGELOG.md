@@ -3,6 +3,20 @@
 All notable changes to this project are documented here. Versioning is semver; token
 values only change in a major version (see README.md "Versioning").
 
+## [0.3.0] - 2026-09-22
+
+### Added
+- `Knob` now sets `setDoubleClickReturnValue` from the bound parameter's own default, so
+  double-clicking any house knob returns it to that parameter's default value. The default is
+  read live from the APVTS and converted out of normalised form, so it stays correct if a
+  product changes a parameter's default later.
+
+  This was deliberately centralised rather than fixed per product. A portfolio-wide audit
+  found only three of ten products implemented the behaviour at all, and the shared `Knob`
+  not having it meant every adopting product inherited the gap by default. Inconsistency
+  between sibling products is itself the usability problem: a person who uses two of these
+  plugins learns that double-click works, then finds it silently does nothing in the next one.
+
 ## [0.2.1] - 2026-09-21
 
 ### Changed

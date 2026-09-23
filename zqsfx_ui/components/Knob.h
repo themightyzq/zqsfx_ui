@@ -48,6 +48,17 @@ public:
         slider.setDescription (tooltip);
         slider.setHelpText (tooltip);
         attachment = std::make_unique<APVTS::SliderAttachment> (apvts, paramId, slider);
+
+        // Double-click resets to the parameter's own default. Must come AFTER the
+        // attachment, which is what gives the slider its range. The default is stored
+        // normalised, so convert it back into the parameter's real units.
+        //
+        // This lives here rather than per-product deliberately: every product built on
+        // this module inherits it, and before this only three of ten had the behaviour
+        // at all, which made it feel arbitrary to anyone using more than one of them.
+        if (auto* param = apvts.getParameter (paramId))
+            slider.setDoubleClickReturnValue (true, param->convertFrom0to1 (param->getDefaultValue()));
+
         if (big)
         {
             // the attachment installs the parameter's own text conversion (7-decimal
