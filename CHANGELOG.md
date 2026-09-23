@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Versioning is semver; token
 values only change in a major version (see README.md "Versioning").
 
+## [0.4.0] - 2026-09-23
+
+### Added
+- `Knob` is keyboard-operable. Its inner slider is now `Knob::Dial`, a `juce::Slider` that
+  takes keyboard focus (JUCE's default is to refuse it, so no house knob could be tabbed to
+  or nudged before), keeps the plain arrow step (the parameter interval, or 1 % of the
+  range), adds Shift+arrow as a fine step of one tenth of that, and draws an accent focus
+  ring around the dial while focused. `knob.slider` keeps its name and type-compatibility
+  with `juce::Slider&`, so no call site changes.
+
 ## [0.3.0] - 2026-09-22
 
 ### Added

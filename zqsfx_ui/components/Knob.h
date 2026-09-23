@@ -17,6 +17,46 @@ using APVTS = juce::AudioProcessorValueTreeState;
 class Knob : public juce::Component
 {
 public:
+    // The inner slider. juce::Slider refuses keyboard focus by default and steps only on
+    // unmodified arrow keys, so a house knob was not keyboard-operable at all before 0.4.0.
+    // Dial takes focus, keeps JUCE's plain-arrow step (the parameter interval, or 1 % of the
+    // range), and adds Shift+arrow as a fine step of one tenth of that.
+    class Dial : public juce::Slider
+    {
+    public:
+        Dial() { setWantsKeyboardFocus (true); }
+
+        bool keyPressed (const juce::KeyPress& key) override
+        {
+            const auto mods = key.getModifiers();
+            if (mods.isShiftDown() && ! mods.isCommandDown() && ! mods.isCtrlDown() && ! mods.isAltDown())
+            {
+                const double coarse = juce::approximatelyEqual (getInterval(), 0.0)
+                                        ? getRange().getLength() * 0.01 : getInterval();
+                const double fine = coarse * 0.1;
+                double delta = 0.0;
+                if (key.isKeyCode (juce::KeyPress::rightKey) || key.isKeyCode (juce::KeyPress::upKey))
+                    delta = fine;
+                else if (key.isKeyCode (juce::KeyPress::leftKey) || key.isKeyCode (juce::KeyPress::downKey))
+                    delta = -fine;
+                if (delta == 0.0)
+                    return juce::Slider::keyPressed (key);
+                setValue (getValue() + delta, juce::sendNotificationSync);
+                return true;
+            }
+            return juce::Slider::keyPressed (key);
+        }
+
+        void focusGained (FocusChangeType) override { repaintParentForFocus(); }
+        void focusLost (FocusChangeType) override { repaintParentForFocus(); }
+
+    private:
+        void repaintParentForFocus()
+        {
+            if (auto* parent = getParentComponent()) parent->repaint();
+        }
+    };
+
     // readout/units are additive: default (false, {}) preserves prior behaviour for every
     // existing call site, including the big-knob path (which never consults them).
     Knob (APVTS& apvts, const juce::String& paramId, const juce::String& labelText,
@@ -107,6 +147,14 @@ public:
         juce::Graphics::ScopedSaveState ss (g);
         g.setOpacity (slider.getAlpha());
         LookAndFeel::drawTickRing (g, square);
+
+        // Keyboard focus ring (workspace rule: every interactive control has a visible focus
+        // indicator). Accent is the house "active" colour; it carries no data meaning here.
+        if (slider.hasKeyboardFocus (false))
+        {
+            g.setColour (colour::accent);
+            g.drawEllipse (square.expanded (3.0f), 1.5f);
+        }
     }
 
     void resized() override
@@ -117,7 +165,7 @@ public:
         slider.setBounds (b);
     }
 
-    juce::Slider slider;
+    Dial slider;
 
 private:
     juce::Label title;
