@@ -178,6 +178,8 @@ tier. The embedded fonts (Barlow Condensed, VT323, IBM Plex Mono) are licensed u
 the SIL Open Font License; their licence texts ship alongside them in
 `assets/fonts/OFL-*.txt`.
 
+Built with JUCE. ZQ SFX, https://www.zq-sfx.com, connect@zq-sfx.com.
+
 ## Versioning
 
 Semantic versioning. Token **values** only change in a major version - a product

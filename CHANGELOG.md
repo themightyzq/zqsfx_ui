@@ -3,6 +3,30 @@
 All notable changes to this project are documented here. Versioning is semver; token
 values only change in a major version (see README.md "Versioning").
 
+## [0.4.1] - 2026-09-25
+
+### Fixed
+- `LookAndFeel::stripFor` no longer drops straight to `drawVectorKnob` for a size band whose
+  own strip failed to load while the other two strips are perfectly fine. It now tries the
+  dial-size-matched strip (or the slider's explicit `zqsfxStrip` override) first, then falls
+  through to the other two loaded strips, nearest size band first, and only reaches the
+  vector fallback when none of the three have loaded at all. Reproduced by invalidating just
+  `stripS`: every dial under 42 px used to render as the flat, dark, scalloped vector knob
+  next to an untouched `stripM` knob one slot over, a jarring mismatch (colour, cap material,
+  pointer weight, ring style) that a single bad or missing embed could trigger for an entire
+  size band. `drawVectorKnob` itself is unchanged and stays the true last resort.
+- `drawRotarySlider` now explicitly requests `Graphics::highResamplingQuality` before
+  blitting a strip frame. Every dial size this module currently defines (66/46/44/40, and
+  anything a product asks for below that) downscales a strip frame, where this makes no
+  difference (area-averaging either way), but it also covers a dial requested LARGER than a
+  strip's native frame (bicubic instead of bilinear upsampling), so a knob is never softer
+  than the strip art actually is, at any size.
+
+### Changed
+- The two knob design source files are renamed by their KnobGallery number
+  (`knob_gallery_2410.knob`, `knob_gallery_2075.knob`); PROVENANCE.md updated. README gains
+  the contact line.
+
 ## [0.4.0] - 2026-09-23
 
 ### Added

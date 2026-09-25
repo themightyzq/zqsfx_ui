@@ -98,6 +98,12 @@ void LookAndFeel::drawRotarySlider (juce::Graphics& g, int x, int y, int width, 
         const int frames = juce::jmax (1, strip.getHeight() / fw);
         const int frame  = juce::jlimit (0, frames - 1,
                                          juce::roundToInt (sliderPos * (float) (frames - 1)));
+        // High-quality resampling: every current dial size (66/46/44/40, or anything smaller
+        // a product asks for) downscales a strip frame, where this matches the default
+        // exactly (area-averaging either way) -- but it also covers a dial requested LARGER
+        // than the strip's native frame (bicubic upsampling instead of bilinear), so a knob
+        // never looks softer than the strip art actually is, at any size.
+        g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         g.drawImage (strip, square.toNearestInt().getX(), square.toNearestInt().getY(),
                      (int) dial, (int) dial, 0, frame * fw, fw, fw);
     }
@@ -336,12 +342,32 @@ juce::Typeface::Ptr LookAndFeel::load (const void* data, int size)
 
 const juce::Image& LookAndFeel::stripFor (juce::Slider& s, float dial) const
 {
+    // Preference order: the explicit per-slider override (if any) or the dial-size band
+    // first, then the OTHER two loaded strips, nearest size band first. A strip that failed
+    // to decode (a bad embed, a product's own setKnobStrips call passing a partial set)
+    // therefore never drops its whole size band straight to drawVectorKnob while a
+    // perfectly good strip is sitting right next to it unused -- the vector knob stays a
+    // true last resort, reached only when none of the three have loaded at all.
     const auto prop = s.getProperties()["zqsfxStrip"].toString();
-    if (prop == "xl") return stripXL;
-    if (prop == "m")  return stripM;
-    if (prop == "s")  return stripS;
-    if (dial >= 56.0f) return stripXL;   // 66 px primaries
-    if (dial >= 42.0f) return stripM;    // 46/44
-    return stripS;                       // 40
+
+    const juce::Image* order[3];
+    if (prop == "xl" || (prop.isEmpty() && dial >= 56.0f))      // 66 px primaries
+    {
+        order[0] = &stripXL; order[1] = &stripM; order[2] = &stripS;
+    }
+    else if (prop == "s" || (prop.isEmpty() && dial < 42.0f))   // 40 and below
+    {
+        order[0] = &stripS; order[1] = &stripM; order[2] = &stripXL;
+    }
+    else                                                        // "m", or 42..55 by size
+    {
+        order[0] = &stripM; order[1] = &stripS; order[2] = &stripXL;
+    }
+
+    for (auto* img : order)
+        if (img->isValid())
+            return *img;
+
+    return *order[0]; // none loaded: caller's isValid() check falls through to drawVectorKnob
 }
 } // namespace zqsfx::ui
