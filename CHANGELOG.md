@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. Versioning is semver; token
 values only change in a major version (see README.md "Versioning").
 
+## [Unreleased]
+
+### Added
+- `.github/workflows/ci.yml`: builds the `ZqsfxUiTokenTests` target and runs it through
+  `ctest` on macOS and Linux for every push to main/master, pull request, and manual run.
+  No module code or token values changed.
+
 ## [0.4.1] - 2026-09-25
 
 ### Fixed
