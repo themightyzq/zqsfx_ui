@@ -32,9 +32,8 @@ int main()
         d.keyPressed (key (juce::KeyPress::rightKey));
         check (near (d.getValue(), 51.0), "plain Right steps by the interval (50 -> 51)");
         d.keyPressed (key (juce::KeyPress::rightKey, juce::ModifierKeys::shiftModifier));
-        check (near (d.getValue(), 51.1) || near (d.getValue(), 51.0),
-               "Shift+Right is a fine step (interval-snapped sliders may round it)");
-        check (near (d.getFineStep(), 0.1), "fine step is a tenth of the interval");
+        check (near (d.getValue(), 52.0), "stepped: Shift+Right moves one interval, not a snapped-away tenth (51 -> 52)");
+        check (near (d.getFineStep(), 1.0), "stepped: fine step is the interval");
     }
 
     {

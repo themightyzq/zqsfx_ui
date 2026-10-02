@@ -13,6 +13,8 @@ values only change in a major version (see README.md "Versioning").
   LookAndFeel's focus outline, keeps JUCE's plain-arrow step and adds Shift+arrow as a fine
   step of one tenth. Products can adopt the house knob behaviour without re-laying out their
   editors. `Knob::Dial` remains as an alias, so existing code is unchanged.
+  On a stepped control (nonzero interval) Shift+arrow moves one interval, the finest step it
+  can take, rather than a tenth that the slider would snap back.
 - `zqsfx::ui::setDoubleClickDefault`: double-click returns a slider to its parameter's
   default. Overloads take a `RangedAudioParameter`, an APVTS plus parameter ID, or a plain
   default value for controls not bound to a parameter. `Knob` now uses it.

@@ -5,7 +5,8 @@
 //
 // juce::Slider refuses keyboard focus by default and steps only on unmodified arrow keys, so
 // before 0.4.0 a house knob was not keyboard-operable at all. Dial keeps JUCE's plain-arrow
-// step (the parameter interval, or 1 % of the range) and adds Shift+arrow at one tenth of it.
+// step (the parameter interval, or 1 % of the range) and adds Shift+arrow at one tenth of it
+// on continuous controls, or one interval on stepped ones.
 //
 // Pair it with setDoubleClickDefault() after the APVTS attachment exists, so a double-click
 // returns the control to its parameter's default.
@@ -25,12 +26,14 @@ public:
         setHasFocusOutline (true);
     }
 
-    // The fine step Shift+arrow applies: a tenth of the plain-arrow step.
+    // The fine step Shift+arrow applies: a tenth of the plain-arrow step (1 % of the range) on
+    // a continuous control. A stepped control cannot move by less than its interval, so there
+    // Shift+arrow moves one interval instead of a tenth that setValue would snap back to zero.
     double getFineStep() const
     {
-        const double coarse = juce::approximatelyEqual (getInterval(), 0.0)
-                                ? getRange().getLength() * 0.01 : getInterval();
-        return coarse * 0.1;
+        if (! juce::approximatelyEqual (getInterval(), 0.0))
+            return getInterval();
+        return getRange().getLength() * 0.01 * 0.1;
     }
 
     bool keyPressed (const juce::KeyPress& key) override
