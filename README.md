@@ -30,7 +30,7 @@ FetchContent_MakeAvailable (JUCE)
 
 FetchContent_Declare (zqsfx_ui
     GIT_REPOSITORY https://github.com/themightyzq/zqsfx_ui.git
-    GIT_TAG v0.4.1
+    GIT_TAG v0.5.0
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable (zqsfx_ui)
 
@@ -113,6 +113,22 @@ control is never invisible.
 
 Section titles on `Panel` are drawn in the platform bold face, wide-tracked (the house
 decision, and how Broken has always looked); labels and buttons use Barlow Condensed.
+
+## Dial and double-click default
+
+`Knob` bundles a title label, the silkscreen tick ring and a `Dial`. A product whose editor
+is already laid out around plain `juce::Slider` members can get the same behaviour without
+re-laying it out: change the member type to `zqsfx::ui::Dial` (it derives from
+`juce::Slider`) and call `setDoubleClickDefault` after the attachment exists.
+
+```cpp
+zqsfx::ui::Dial gainSlider;                       // was: juce::Slider gainSlider;
+gainAttachment = std::make_unique<APVTS::SliderAttachment> (apvts, "gain", gainSlider);
+zqsfx::ui::setDoubleClickDefault (gainSlider, apvts, "gain");
+```
+
+A `Dial` takes keyboard focus and shows the focus ring; arrow keys step by the parameter
+interval (or 1 % of the range) and Shift+arrow steps by a tenth of that.
 
 ## Tokens
 

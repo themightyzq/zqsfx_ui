@@ -6,7 +6,7 @@
 
   ID:                 zqsfx_ui
   vendor:             ZQ SFX
-  version:            0.4.1
+  version:            0.5.0
   name:               ZQ SFX shared UI
   description:        Shared design-system UI tokens, LookAndFeel, and controls for
                        every ZQ SFX JUCE product.
@@ -29,6 +29,7 @@
 #include "tokens/Tokens.h"
 #include "lookandfeel/LookAndFeel.h"
 #include "components/Panel.h"
+#include "components/Dial.h"
 #include "components/Knob.h"
 #include "components/Combo.h"
 #include "components/Toggles.h"

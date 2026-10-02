@@ -128,6 +128,15 @@ if (ZQSFX_UI_BUILD_DEMO)
         PRIVATE zqsfx::zqsfx_ui
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
+    juce_add_console_app (ZqsfxUiDialTests PRODUCT_NAME "ZqsfxUiDialTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uidialtests)
+    target_sources (ZqsfxUiDialTests PRIVATE tests/DialTests.cpp)
+    target_compile_definitions (ZqsfxUiDialTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+    target_link_libraries (ZqsfxUiDialTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
     enable_testing()
     add_test (NAME TokenTests COMMAND ZqsfxUiTokenTests)
+    add_test (NAME DialTests COMMAND ZqsfxUiDialTests)
 endif()

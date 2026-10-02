@@ -5,7 +5,18 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-02
+
 ### Added
+- `zqsfx::ui::Dial` (`components/Dial.h`): the house rotary dial as a namespace-level class, a
+  drop-in replacement for a `juce::Slider` member. It takes keyboard focus, shows the
+  LookAndFeel's focus outline, keeps JUCE's plain-arrow step and adds Shift+arrow as a fine
+  step of one tenth. Products can adopt the house knob behaviour without re-laying out their
+  editors. `Knob::Dial` remains as an alias, so existing code is unchanged.
+- `zqsfx::ui::setDoubleClickDefault`: double-click returns a slider to its parameter's
+  default. Overloads take a `RangedAudioParameter`, an APVTS plus parameter ID, or a plain
+  default value for controls not bound to a parameter. `Knob` now uses it.
+- `DialTests` console test (key steps, focus settings, double-click default), run in CI.
 - `.github/workflows/ci.yml`: builds the `ZqsfxUiTokenTests` target and runs it through
   `ctest` on macOS and Linux for every push to main/master, pull request, and manual run.
   No module code or token values changed.

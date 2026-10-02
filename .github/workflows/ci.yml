@@ -44,7 +44,7 @@ jobs:
 
       # Only the test target: the gallery app and snapshot tool are not needed here.
       - name: Build TokenTests
-        run: cmake --build build --config Release --parallel 4 --target ZqsfxUiTokenTests
+        run: cmake --build build --config Release --parallel 4 --target ZqsfxUiTokenTests ZqsfxUiDialTests
 
       # TokenTests: WCAG contrast of every token pair plus colour-blind simulation.
       - name: Run TokenTests

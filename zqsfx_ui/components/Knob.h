@@ -9,6 +9,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include "../lookandfeel/LookAndFeel.h"
 #include "../tokens/Tokens.h"
+#include "Dial.h"
 
 namespace zqsfx::ui
 {
@@ -17,45 +18,9 @@ using APVTS = juce::AudioProcessorValueTreeState;
 class Knob : public juce::Component
 {
 public:
-    // The inner slider. juce::Slider refuses keyboard focus by default and steps only on
-    // unmodified arrow keys, so a house knob was not keyboard-operable at all before 0.4.0.
-    // Dial takes focus, keeps JUCE's plain-arrow step (the parameter interval, or 1 % of the
-    // range), and adds Shift+arrow as a fine step of one tenth of that.
-    class Dial : public juce::Slider
-    {
-    public:
-        Dial() { setWantsKeyboardFocus (true); }
-
-        bool keyPressed (const juce::KeyPress& key) override
-        {
-            const auto mods = key.getModifiers();
-            if (mods.isShiftDown() && ! mods.isCommandDown() && ! mods.isCtrlDown() && ! mods.isAltDown())
-            {
-                const double coarse = juce::approximatelyEqual (getInterval(), 0.0)
-                                        ? getRange().getLength() * 0.01 : getInterval();
-                const double fine = coarse * 0.1;
-                double delta = 0.0;
-                if (key.isKeyCode (juce::KeyPress::rightKey) || key.isKeyCode (juce::KeyPress::upKey))
-                    delta = fine;
-                else if (key.isKeyCode (juce::KeyPress::leftKey) || key.isKeyCode (juce::KeyPress::downKey))
-                    delta = -fine;
-                if (delta == 0.0)
-                    return juce::Slider::keyPressed (key);
-                setValue (getValue() + delta, juce::sendNotificationSync);
-                return true;
-            }
-            return juce::Slider::keyPressed (key);
-        }
-
-        void focusGained (FocusChangeType) override { repaintParentForFocus(); }
-        void focusLost (FocusChangeType) override { repaintParentForFocus(); }
-
-    private:
-        void repaintParentForFocus()
-        {
-            if (auto* parent = getParentComponent()) parent->repaint();
-        }
-    };
+    // The inner slider (now the namespace-level zqsfx::ui::Dial; this alias keeps the
+    // Knob::Dial spelling that products already use).
+    using Dial = zqsfx::ui::Dial;
 
     // readout/units are additive: default (false, {}) preserves prior behaviour for every
     // existing call site, including the big-knob path (which never consults them).
@@ -65,6 +30,7 @@ public:
           std::function<juce::String (double)> fmt = nullptr)
     {
         slider.setSliderStyle (juce::Slider::RotaryVerticalDrag);
+        slider.setHasFocusOutline (false); // Knob paints its own ring around the dial face
         if (big)
         {
             slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 64, 16);
@@ -96,8 +62,7 @@ public:
         // This lives here rather than per-product deliberately: every product built on
         // this module inherits it, and before this only three of ten had the behaviour
         // at all, which made it feel arbitrary to anyone using more than one of them.
-        if (auto* param = apvts.getParameter (paramId))
-            slider.setDoubleClickReturnValue (true, param->convertFrom0to1 (param->getDefaultValue()));
+        setDoubleClickDefault (slider, apvts, paramId);
 
         if (big)
         {
