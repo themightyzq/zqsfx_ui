@@ -2,7 +2,8 @@
 # FAST tier — every commit. Builds the test programs CTest knows about (into build-check/,
 # arm64 Release, never installed) and runs CTest. The program list comes from CTest itself
 # (`ctest -N -V`), so a newly registered test is built and run without editing this file.
-# The zq-commit-gate plugin runs this before Claude's `git commit` (this project is git only).
+# Before a `dv commit` that changes this folder, the JUCE repo's .dvhooks/pre-commit runs it (through
+# the JUCE root's tools/check.sh --hook); zq-commit-gate runs it before Claude's dv and git commits.
 # Template: ~/Projects/_policy/check-sh-template.sh. Full tier: CLAUDE.md, "Verification tiers".
 set -u
 cd "$(dirname "$0")/.." || exit 2
