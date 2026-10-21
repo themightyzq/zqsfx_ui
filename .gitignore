@@ -3,3 +3,6 @@ build-*/
 _deps/
 .DS_Store
 snapshots/*.png
+
+# clangd index and other editor caches (generated)
+.cache/
