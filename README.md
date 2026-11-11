@@ -164,7 +164,8 @@ module was extracted from for what each token means and where it is used.
    `LookAndFeel::createFocusOutlineForComponent` (`geom::focusRingPx`). JUCE draws it only
    on components that opt in, and its own buttons, combo boxes and toggles never do, so
    call `zqsfx::ui::enableFocusRings (*this)` at the end of every editor constructor (and
-   again after building controls at run time). A control that draws its own focus calls
+   again after building controls at run time, or after a tab shows content that was not in
+   the window before). A control that draws its own focus calls
    `zqsfx::ui::markOwnFocusRing` (Knob and LogoMark already do).
 3. Text meets WCAG AA (4.5:1) at the size it is drawn - verified by `TokenTests`.
 4. Hit targets are at least `geom::minHitTargetPx` (22 px).

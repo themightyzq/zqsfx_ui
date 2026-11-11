@@ -23,6 +23,7 @@ int main()
     juce::ComboBox combo;
     juce::ToggleButton toggle ("Loop");
     juce::Label label; // takes no keyboard focus
+    juce::TextButton disabled ("Split"); // starts disabled, enabled later
     zqsfx::ui::Dial ownRing;
     zqsfx::ui::markOwnFocusRing (ownRing);
     zqsfx::ui::LogoMark logo ("Test");
@@ -34,6 +35,8 @@ int main()
     panel.addAndMakeVisible (combo);
     panel.addAndMakeVisible (toggle);
     panel.addAndMakeVisible (label);
+    panel.addAndMakeVisible (disabled);
+    disabled.setEnabled (false);
     panel.addAndMakeVisible (ownRing);
     root.addAndMakeVisible (logo);
 
@@ -45,7 +48,7 @@ int main()
     check (button.hasFocusOutline(), "a TextButton nested one level down gets the ring");
     check (combo.hasFocusOutline(), "a ComboBox gets the ring");
     check (toggle.hasFocusOutline(), "a ToggleButton gets the ring");
-    check (! label.hasFocusOutline(), "a Label, which takes no focus, is left alone");
+    check (disabled.hasFocusOutline(), "a button that starts disabled still gets the ring, for when it is enabled");
     check (! root.hasFocusOutline(), "the root (an editor catching shortcuts) gets no ring around itself");
     check (! ownRing.hasFocusOutline(), "a control marked with markOwnFocusRing keeps its own focus drawing");
     check (! logo.hasFocusOutline(), "the logo mark keeps its own focus drawing (it lights up)");

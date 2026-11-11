@@ -5,6 +5,15 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-11-11
+
+### Fixed
+- `enableFocusRings` now opts in every component under the root, not only those that want
+  keyboard focus at the moment it runs. JUCE reports a disabled control as not wanting focus, so
+  in 0.6.0 a button that started disabled (Split, Add Chord) never got its ring once enabled. A
+  component that never takes focus never shows the ring, so opting it in changes nothing.
+  `FocusRingTests` covers the disabled case.
+
 ## [0.6.0] - 2026-11-11
 
 ### Added

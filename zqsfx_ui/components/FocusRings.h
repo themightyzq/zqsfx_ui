@@ -22,14 +22,17 @@ inline void markOwnFocusRing (juce::Component& c)
     c.setHasFocusOutline (false);
 }
 
-// Opts every focusable component under root into the house focus ring. root itself is skipped:
-// an editor or window takes focus only to catch keyboard shortcuts, and a ring around the whole
-// window would mark nothing.
+// Opts every component under root into the house focus ring. The ring appears only while a
+// component has keyboard focus, so opting in a label or panel that never takes focus changes
+// nothing. Every component is opted in, not just those that want focus now, because JUCE reports
+// a disabled control as not wanting focus: a button that starts disabled would otherwise never
+// get its ring once enabled. root itself is skipped: an editor or window takes focus only to
+// catch keyboard shortcuts, and a ring around the whole window would mark nothing.
 inline void enableFocusRings (juce::Component& root)
 {
     for (auto* child : root.getChildren())
     {
-        if (child->getWantsKeyboardFocus() && ! child->getProperties().contains (ownFocusRingProperty))
+        if (! child->getProperties().contains (ownFocusRingProperty))
             child->setHasFocusOutline (true);
         enableFocusRings (*child);
     }
