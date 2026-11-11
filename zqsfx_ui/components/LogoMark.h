@@ -9,6 +9,7 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../tokens/Tokens.h"
+#include "FocusRings.h"
 
 namespace zqsfx::ui
 {
@@ -26,6 +27,7 @@ public:
         setTitle (aboutText);
         setDescription (aboutText);
         setHelpText (aboutText);
+        markOwnFocusRing (*this); // the mark lights up while it has keyboard focus
     }
 
     // The mark's inner letterforms close up below this height (style guide section 5).

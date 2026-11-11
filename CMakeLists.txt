@@ -16,7 +16,7 @@ if (APPLE AND (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR))
     endif()
 endif()
 
-project (zqsfx_ui VERSION 0.5.0 LANGUAGES C CXX)
+project (zqsfx_ui VERSION 0.6.0 LANGUAGES C CXX)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -136,7 +136,16 @@ if (ZQSFX_UI_BUILD_DEMO)
         PRIVATE zqsfx::zqsfx_ui
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
+    juce_add_console_app (ZqsfxUiFocusRingTests PRODUCT_NAME "ZqsfxUiFocusRingTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uifocusringtests)
+    target_sources (ZqsfxUiFocusRingTests PRIVATE tests/FocusRingTests.cpp)
+    target_compile_definitions (ZqsfxUiFocusRingTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+    target_link_libraries (ZqsfxUiFocusRingTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
     enable_testing()
     add_test (NAME TokenTests COMMAND ZqsfxUiTokenTests)
     add_test (NAME DialTests COMMAND ZqsfxUiDialTests)
+    add_test (NAME FocusRingTests COMMAND ZqsfxUiFocusRingTests)
 endif()

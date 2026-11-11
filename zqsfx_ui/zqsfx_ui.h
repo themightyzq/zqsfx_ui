@@ -29,6 +29,7 @@
 #include "tokens/Tokens.h"
 #include "lookandfeel/LookAndFeel.h"
 #include "components/Panel.h"
+#include "components/FocusRings.h"
 #include "components/Dial.h"
 #include "components/Knob.h"
 #include "components/Combo.h"

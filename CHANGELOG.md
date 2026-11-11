@@ -5,6 +5,19 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-11
+
+### Added
+- `zqsfx::ui::enableFocusRings (root)` (`components/FocusRings.h`): opts every focusable
+  component under `root` into the house focus ring. JUCE draws the ring only on components that
+  call `setHasFocusOutline (true)`, and its own buttons, combo boxes and toggles never do, so in
+  products that used them, tabbing to a button showed nothing. The root itself is skipped (an
+  editor takes focus only for shortcuts). Call it at the end of an editor's constructor.
+- `zqsfx::ui::markOwnFocusRing (c)`: marks a control that draws its own focus so
+  `enableFocusRings` leaves it alone. `Knob` (its ring around the dial face) and `LogoMark` (it
+  lights up) now use it.
+- `FocusRingTests` console test, run in CI.
+
 ## [0.5.0] - 2026-10-02
 
 ### Added

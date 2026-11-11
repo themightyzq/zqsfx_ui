@@ -161,7 +161,11 @@ module was extracted from for what each token means and where it is used.
    description, and help text. `Knob`, `Combo`, `LitToggle`, and `TextToggle` all set
    these on their inner control automatically.
 2. Keyboard focus is always visible: a 2 px `colour::accent` ring via
-   `LookAndFeel::createFocusOutlineForComponent` (`geom::focusRingPx`).
+   `LookAndFeel::createFocusOutlineForComponent` (`geom::focusRingPx`). JUCE draws it only
+   on components that opt in, and its own buttons, combo boxes and toggles never do, so
+   call `zqsfx::ui::enableFocusRings (*this)` at the end of every editor constructor (and
+   again after building controls at run time). A control that draws its own focus calls
+   `zqsfx::ui::markOwnFocusRing` (Knob and LogoMark already do).
 3. Text meets WCAG AA (4.5:1) at the size it is drawn - verified by `TokenTests`.
 4. Hit targets are at least `geom::minHitTargetPx` (22 px).
 5. Colour never carries meaning alone (see "Complementary channels" above).

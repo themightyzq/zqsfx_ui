@@ -10,6 +10,7 @@
 #include "../lookandfeel/LookAndFeel.h"
 #include "../tokens/Tokens.h"
 #include "Dial.h"
+#include "FocusRings.h"
 
 namespace zqsfx::ui
 {
@@ -30,7 +31,7 @@ public:
           std::function<juce::String (double)> fmt = nullptr)
     {
         slider.setSliderStyle (juce::Slider::RotaryVerticalDrag);
-        slider.setHasFocusOutline (false); // Knob paints its own ring around the dial face
+        markOwnFocusRing (slider); // Knob paints its own ring around the dial face
         if (big)
         {
             slider.setTextBoxStyle (juce::Slider::TextBoxBelow, false, 64, 16);
