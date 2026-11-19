@@ -5,7 +5,7 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
-## [0.7.0] - unreleased
+## [0.7.0] - 2026-11-19
 
 ### Added
 - Update notice. `update/UpdateCheck.h`: version comparison, the Version file reader, the
