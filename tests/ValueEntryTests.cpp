@@ -76,6 +76,7 @@ juce::MouseEvent rightEvent (juce::Component& c, juce::Point<float> p, juce::Mod
 
 int main()
 {
+    std::cout << std::unitbuf; // each line reaches the log at once, so a crash shows the last check passed
     juce::ScopedJuceInitialiser_GUI gui;
     using zqsfx::ui::Dial;
     using zqsfx::ui::ValueEntry;

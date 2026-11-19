@@ -49,3 +49,18 @@ jobs:
       # TokenTests: WCAG contrast of every token pair plus colour-blind simulation.
       - name: Run TokenTests
         run: ctest --test-dir build -C Release --output-on-failure
+
+      # A test that crashes prints no reason. On Linux, rerun each failed one under gdb so the
+      # log shows where it died.
+      - name: Backtrace failed tests (Linux)
+        if: failure() && runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y gdb
+          for t in $(ctest --test-dir build -N | sed -n 's/^ *Test *#[0-9]*: //p'); do
+            exe=$(find build -type f -name "ZqsfxUi${t}" -perm -u+x | head -1)
+            [ -n "$exe" ] || continue
+            if ! "$exe" > /dev/null 2>&1; then
+              echo "=== $t ==="
+              gdb -batch -ex run -ex bt -ex "info threads" "$exe" 2>&1 | tail -60
+            fi
+          done
