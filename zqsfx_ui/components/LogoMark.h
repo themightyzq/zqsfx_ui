@@ -39,6 +39,10 @@ public:
 
     bool isUpdateAvailable() const { return updateAvailable; }
 
+    // Style guide section 5: logoBright inside an About box or an app's title area, silkCaption
+    // (the quiet maker's mark) everywhere else.
+    void setAlwaysBright (bool bright) { alwaysBright = bright; repaint(); }
+
     // The mark's inner letterforms close up below this height (style guide section 5).
     static int minimumHeight() { return geom::logoMinHeightPx; }
 
@@ -65,7 +69,7 @@ public:
         auto path = createPath();
         path.applyTransform (path.getTransformToScaleToFit (area, true, juce::Justification::centred));
 
-        const bool lit = shouldDrawButtonAsHighlighted || hasKeyboardFocus (true);
+        const bool lit = alwaysBright || shouldDrawButtonAsHighlighted || hasKeyboardFocus (true);
         g.setColour (lit ? colour::logoBright : colour::silkCaption); // never accent
         g.fillPath (path);
 
@@ -94,6 +98,7 @@ private:
 
     juce::String aboutName;
     bool updateAvailable = false;
+    bool alwaysBright = false;
 
     static constexpr const char* pathData =
         "M995.95 802.79l-466.83 -802.79 933.66 0 -466.83 802.79zm369.85 -747l-353.07 0 0 607.16c"

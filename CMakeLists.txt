@@ -152,9 +152,36 @@ if (ZQSFX_UI_BUILD_DEMO)
         PRIVATE zqsfx::zqsfx_ui
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
+    juce_add_console_app (ZqsfxUiValueEntryTests PRODUCT_NAME "ZqsfxUiValueEntryTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uivalueentrytests)
+    target_sources (ZqsfxUiValueEntryTests PRIVATE tests/ValueEntryTests.cpp)
+    target_compile_definitions (ZqsfxUiValueEntryTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_MODAL_LOOPS_PERMITTED=1 ZQSFX_UI_TESTING=1)
+    target_link_libraries (ZqsfxUiValueEntryTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
+    juce_add_console_app (ZqsfxUiRestingDisplayTests PRODUCT_NAME "ZqsfxUiRestingDisplayTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uirestingdisplaytests)
+    target_sources (ZqsfxUiRestingDisplayTests PRIVATE tests/RestingDisplayTests.cpp)
+    target_compile_definitions (ZqsfxUiRestingDisplayTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_MODAL_LOOPS_PERMITTED=1 ZQSFX_UI_TESTING=1)
+    target_link_libraries (ZqsfxUiRestingDisplayTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
+    juce_add_console_app (ZqsfxUiAboutBoxTests PRODUCT_NAME "ZqsfxUiAboutBoxTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uiaboutboxtests)
+    target_sources (ZqsfxUiAboutBoxTests PRIVATE tests/AboutBoxTests.cpp)
+    target_compile_definitions (ZqsfxUiAboutBoxTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_MODAL_LOOPS_PERMITTED=1 ZQSFX_UI_TESTING=1)
+    target_link_libraries (ZqsfxUiAboutBoxTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
     enable_testing()
     add_test (NAME TokenTests COMMAND ZqsfxUiTokenTests)
     add_test (NAME DialTests COMMAND ZqsfxUiDialTests)
     add_test (NAME FocusRingTests COMMAND ZqsfxUiFocusRingTests)
     add_test (NAME UpdateTests COMMAND ZqsfxUiUpdateTests)
+    add_test (NAME ValueEntryTests COMMAND ZqsfxUiValueEntryTests)
+    add_test (NAME RestingDisplayTests COMMAND ZqsfxUiRestingDisplayTests)
+    add_test (NAME AboutBoxTests COMMAND ZqsfxUiAboutBoxTests)
 endif()

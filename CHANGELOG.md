@@ -26,6 +26,29 @@ values only change in a major version (see README.md "Versioning").
   fetches only once a day per process; a cancelled check hands the day back; writes retry a
   locked file three times (Windows).
 - `UpdateTests` console test, run in CI.
+- Typing a value (`components/ValueEntry.h`). Every `Dial`, and so every `Knob`, now has the
+  House right-click menu ("Type a value…", "Reset to default"), and Return on a focused knob
+  opens a small text box over it. Text is read through the parameter's own text conversion, so
+  "2 kHz" works where the parameter accepts it; out-of-range values are limited to the range;
+  unreadable text changes nothing. A typed value reaches the host as one complete change, so
+  automation recording takes it. `setDoubleClickDefault (slider, apvts, id)` also tells a `Dial`
+  its parameter. A plain `juce::Slider` gets the same by owning a `ValueEntry` on it; a Product
+  with its own knob menu adds the two items with `addValueEntryItems`. A right-click never moves
+  the value. `ValueEntryTests`.
+- Resting displays (`components/RestingDisplay.h`). `ActivityFlag` (in the processor; the audio
+  thread notes each block's peak, no allocation, no lock) and `RestClock` (owned by a display)
+  decide four times a second whether the display should animate: it rests while hidden or
+  minimised, or after 2 seconds below -80 dBFS, and wakes at the first loud block.
+  `drawRestingMark` draws the dim mark a resting display of live sound shows; a display of
+  settings stops moving but keeps drawing them. `RestingDisplayTests`.
+- The House About box (`components/AboutBox.h`). One card over a dimmed backdrop inside the
+  window: mark, name, version, the reported delay (plugins; read live, "Delay: 512 samples
+  (10.7 ms at 48 kHz)"), credits, licence and source link, zq-sfx.com and the address, the
+  Update notice panel, Close. Escape, Close or a click outside closes it and focus returns to the
+  logo; it scales down to fit a short window; it closes itself if the window is destroyed under
+  it. `AboutBoxTests`. `LogoMark::setAlwaysBright` for the mark inside it.
+- The gallery's logo opens the About box, and the screens panel shows a resting display. The
+  snapshot tool also writes `snapshots/about_plugin.png` and `snapshots/about_app.png`.
 
 ### Fixed
 - The module declaration's `version:` line read 0.5.0; it now matches the release.

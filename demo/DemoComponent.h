@@ -8,6 +8,10 @@
 #include <cmath>
 #include <zqsfx_ui/zqsfx_ui.h>
 
+#ifndef ZQSFX_UI_DEMO_VERSION
+ #define ZQSFX_UI_DEMO_VERSION "0.7.0"
+#endif
+
 namespace zqsfx::ui
 {
 // A minimal AudioProcessor whose only job is to own the APVTS the demo controls bind
@@ -15,7 +19,12 @@ namespace zqsfx::ui
 class DemoProcessor : public juce::AudioProcessor
 {
 public:
-    DemoProcessor() : apvts (*this, nullptr, "PARAMS", createLayout()) {}
+    DemoProcessor() : apvts (*this, nullptr, "PARAMS", createLayout())
+    {
+        // Stand-ins for a real plugin, so the About box has a delay to show.
+        setRateAndBufferSizeDetails (48000.0, 512);
+        setLatencySamples (512);
+    }
 
     const juce::String getName() const override { return "ZqsfxUiDemoProcessor"; }
     void prepareToPlay (double, int) override {}
@@ -76,10 +85,13 @@ private:
 };
 
 // A phosphor screen that draws a sine wave and an LCD caption, standing in for a
-// scope/tuner/curve display.
+// scope/tuner/curve display. With `resting` set it draws what a resting display of live
+// sound shows instead: the dim mark (components/RestingDisplay.h).
 class SineScreen : public PhosphorScreen
 {
 public:
+    bool resting = false;
+
     SineScreen()
     {
         setTitle ("Waveform preview");
@@ -89,6 +101,11 @@ public:
 
     void paintContent (juce::Graphics& g, juce::Rectangle<int> glassArea) override
     {
+        if (resting)
+        {
+            drawRestingMark (g, glassArea.toFloat());
+            return;
+        }
         auto b = glassArea.toFloat().reduced (4.0f, 10.0f);
         juce::Path wave;
         constexpr int steps = 128;
@@ -242,6 +259,22 @@ public:
         controlsPanel.addAndMakeVisible (ledOff);
 
         screensPanel.addAndMakeVisible (sineScreen);
+        restingScreen.resting = true;
+        restingScreen.setTitle ("Resting display");
+        restingScreen.setDescription ("No sound");
+        screensPanel.addAndMakeVisible (restingScreen);
+
+        logo.onClick = [this]
+        {
+            AboutInfo info;
+            info.productName = "ZQ SFX UI Gallery";
+            info.version = ZQSFX_UI_DEMO_VERSION;
+            info.credits = { "Fonts: Barlow Condensed, IBM Plex Mono, VT323 (SIL Open Font License)",
+                             "Knobs: CC0 designs from the g200kg KnobGallery" };
+            info.sourceUrl = "https://github.com/themightyzq/zqsfx_ui";
+            info.processor = &apvts.processor;
+            AboutBox::show (*this, info, &logo);
+        };
         meter.setLevelDb (-9.0f);
         screensPanel.addAndMakeVisible (meter);
 
@@ -369,6 +402,8 @@ private:
         sineScreen.setBounds (b.removeFromTop (170));
         b.removeFromTop (12);
         meter.setBounds (b.removeFromLeft (16).withHeight (juce::jmin (b.getHeight(), 130)));
+        b.removeFromLeft (12);
+        restingScreen.setBounds (b.withHeight (juce::jmin (b.getHeight(), 130)));
     }
 
     void layoutChannels()
@@ -399,7 +434,7 @@ private:
     LitToggle litOn, litOff;
     Led ledOn, ledOff;
 
-    SineScreen sineScreen;
+    SineScreen sineScreen, restingScreen;
     PeakMeter meter;
 
     std::array<std::unique_ptr<ChannelSwatch>, 5> swatches;

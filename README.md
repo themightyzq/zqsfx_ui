@@ -130,6 +130,55 @@ zqsfx::ui::setDoubleClickDefault (gainSlider, apvts, "gain");
 A `Dial` takes keyboard focus and shows the focus ring; arrow keys step by the parameter
 interval (or 1 % of the range) and Shift+arrow steps by a tenth of that.
 
+**Typing a value.** Right-click a `Dial` for "Type a value…" and "Reset to default"; Return on
+a focused one opens the same text box. Nothing to wire: `setDoubleClickDefault (slider, apvts,
+id)` also tells the `Dial` which parameter to send the change to, so the host records it. For a
+plain `juce::Slider`, keep a `zqsfx::ui::ValueEntry` member constructed on it (after the slider).
+A subclass that already has its own right-click menu keeps it and adds the House items:
+
+```cpp
+zqsfx::ui::addValueEntryItems (menu, mySlider.valueEntry); // mySlider is a Dial subclass
+```
+
+## Resting displays
+
+A display of live sound (meter, scope, spectrum, waveform) stops animating while it is hidden,
+or after 2 seconds below -80 dBFS, and shows the dim mark instead:
+
+```cpp
+// processor: one flag, noted in processBlock (no allocation, no lock)
+zqsfx::ui::ActivityFlag activity;            // processBlock: activity.noteBlock (buffer);
+
+// display: owns a RestClock and starts or stops its own timer
+zqsfx::ui::RestClock rest { *this, &processor.activity,
+                            [this] (bool resting) { if (resting) stopTimer(); else startTimerHz (30); repaint(); } };
+// paint: if (rest.isResting()) { zqsfx::ui::drawRestingMark (g, area); return; }
+```
+
+A display of settings (an envelope or filter curve) passes `nullptr` for the flag: it rests only
+while hidden, and keeps drawing its settings.
+
+## About box
+
+One About box for every Product, opened from the logo:
+
+```cpp
+logo.onClick = [this]
+{
+    zqsfx::ui::AboutInfo info;
+    info.productName = "Worldizer";
+    info.version = JucePlugin_VersionString;
+    info.productId = "worldizer";                         // the Update notice panel; empty = none
+    info.credits = { "Fonts: Barlow Condensed, IBM Plex Mono (SIL Open Font License)" };
+    info.sourceUrl = "https://github.com/themightyzq/Worldizer";
+    info.processor = &processor;                          // plugins: the delay row; apps: leave null
+    zqsfx::ui::AboutBox::show (*this, info, &logo);
+};
+```
+
+It covers the window with a dimmed backdrop; Escape, Close or a click outside closes it. It uses
+the module's look whatever the Product's own LookAndFeel is.
+
 ## Tokens
 
 `zqsfx::ui::colour`, `zqsfx::ui::gradients`, and `zqsfx::ui::geom` (in

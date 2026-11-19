@@ -66,6 +66,39 @@ int main (int argc, char* argv[])
         }
     }
 
+    // The House About box, as a plugin shows it (delay row) and as an app shows it (none),
+    // each over a host the size of a small plugin window.
+    auto renderAbout = [&] (const juce::String& name, juce::AudioProcessor* proc, const juce::String& id)
+    {
+        // Stands in for a plugin window, so the dimmed backdrop reads as it will in a Product.
+        struct Window : juce::Component
+        {
+            void paint (juce::Graphics& g) override { g.setGradientFill (zqsfx::ui::gradients::chassis (getLocalBounds().toFloat())); g.fillAll(); }
+        } host;
+        host.setSize (560, 520);
+        zqsfx::ui::AboutInfo info;
+        info.productName = proc != nullptr ? "Unravel" : "Chord Foundry";
+        info.version = "0.7.0";
+        info.credits = { "Fonts: Barlow Condensed, IBM Plex Mono, VT323 (SIL Open Font License)" };
+        if (proc != nullptr)
+            info.credits.add ("Knobs: CC0 designs from the g200kg KnobGallery");
+        info.sourceUrl = "https://github.com/themightyzq/" + id;
+        info.processor = proc;
+        auto& box = zqsfx::ui::AboutBox::show (host, info, nullptr);
+        juce::ignoreUnused (box);
+        auto file = outputFile.getSiblingFile (name);
+        auto image = host.createComponentSnapshot (host.getLocalBounds(), true, 2.0f);
+        if (writePng (image, file))
+            std::cout << "Wrote " << file.getFullPathName() << std::endl;
+        else
+        {
+            std::cerr << "Failed to write " << file.getFullPathName() << std::endl;
+            ok = false;
+        }
+    };
+    renderAbout ("about_plugin.png", &processor, "unravel");
+    renderAbout ("about_app.png", nullptr, "chordfoundry");
+
     juce::LookAndFeel::setDefaultLookAndFeel (nullptr);
 
     return ok ? 0 : 1;

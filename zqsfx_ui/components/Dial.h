@@ -9,9 +9,12 @@
 // on continuous controls, or one interval on stepped ones.
 //
 // Pair it with setDoubleClickDefault() after the APVTS attachment exists, so a double-click
-// returns the control to its parameter's default.
+// returns the control to its parameter's default. Right-click opens the House menu and Return
+// opens the typing box (see ValueEntry.h); a subclass that overrides mouseDown keeps its own menu.
 
 #include <juce_audio_processors/juce_audio_processors.h>
+
+#include "ValueEntry.h"
 
 namespace zqsfx::ui
 {
@@ -26,6 +29,9 @@ public:
         setHasFocusOutline (true);
     }
 
+    // Typing a value. Public so a Product's own menu can add the House items to it.
+    ValueEntry valueEntry { *this, ValueEntry::dialHandlesInput };
+
     // The fine step Shift+arrow applies: a tenth of the plain-arrow step (1 % of the range) on
     // a continuous control. A stepped control cannot move by less than its interval, so there
     // Shift+arrow moves one interval instead of a tenth that setValue would snap back to zero.
@@ -36,8 +42,38 @@ public:
         return getRange().getLength() * 0.01 * 0.1;
     }
 
+    void mouseDown (const juce::MouseEvent& e) override
+    {
+        if (e.mods.isPopupMenu())
+        {
+            // Slider::mouseDown is skipped, so its drag state is stale: swallow the drag and
+            // release that follow so this click cannot move the value.
+            swallowingPopupClick = true;
+            valueEntry.showMenu();
+            return;
+        }
+        swallowingPopupClick = false;
+        juce::Slider::mouseDown (e);
+    }
+
+    void mouseDrag (const juce::MouseEvent& e) override
+    {
+        if (! swallowingPopupClick) juce::Slider::mouseDrag (e);
+    }
+
+    void mouseUp (const juce::MouseEvent& e) override
+    {
+        if (! swallowingPopupClick) juce::Slider::mouseUp (e);
+        swallowingPopupClick = false;
+    }
+
     bool keyPressed (const juce::KeyPress& key) override
     {
+        if (key == juce::KeyPress::returnKey)
+        {
+            valueEntry.openEditor();
+            return true;
+        }
         const auto mods = key.getModifiers();
         if (mods.isShiftDown() && ! mods.isCommandDown() && ! mods.isCtrlDown() && ! mods.isAltDown())
         {
@@ -58,6 +94,8 @@ public:
     void focusLost (FocusChangeType) override { repaintParentForFocus(); }
 
 private:
+    bool swallowingPopupClick = false;
+
     void repaintParentForFocus()
     {
         if (auto* parent = getParentComponent()) parent->repaint();
@@ -70,6 +108,14 @@ private:
 inline void setDoubleClickDefault (juce::Slider& slider, const juce::RangedAudioParameter& param)
 {
     slider.setDoubleClickReturnValue (true, param.convertFrom0to1 (param.getDefaultValue()));
+}
+
+// The non-const form also tells a Dial's ValueEntry which parameter to send gestures to.
+inline void setDoubleClickDefault (juce::Slider& slider, juce::RangedAudioParameter& param)
+{
+    setDoubleClickDefault (slider, static_cast<const juce::RangedAudioParameter&> (param));
+    if (auto* dial = dynamic_cast<Dial*> (&slider))
+        dial->valueEntry.setParameter (&param);
 }
 
 inline void setDoubleClickDefault (juce::Slider& slider,

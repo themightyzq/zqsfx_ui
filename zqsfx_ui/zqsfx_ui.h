@@ -30,6 +30,7 @@
 #include "lookandfeel/LookAndFeel.h"
 #include "components/Panel.h"
 #include "components/FocusRings.h"
+#include "components/ValueEntry.h"
 #include "components/Dial.h"
 #include "components/Knob.h"
 #include "components/Combo.h"
@@ -40,3 +41,5 @@
 #include "components/LogoMark.h"
 #include "update/UpdateCheck.h"
 #include "components/UpdateNotice.h"
+#include "components/RestingDisplay.h"
+#include "components/AboutBox.h"
