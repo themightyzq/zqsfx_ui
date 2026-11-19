@@ -271,16 +271,17 @@ int main()
         check (near (s.getValue(), 0.7), "disabled plain slider right-clicked keeps 0.7");
         check (ValueEntry::menusShownForTesting == before, "disabled plain slider shows no menu");
 
-        // JUCE skips the drag start when its own popup menu is enabled: no saved value to restore.
+        // JUCE skips the drag start in some cases (its own popup menu enabled, an empty range), so
+        // ValueEntry can see a right-click with no saved value. Model that directly: the slider's
+        // own mouseDown is not sent, because with its popup menu enabled it opens a real menu
+        // window, which crashes on a machine with no display (Linux CI).
         juce::Slider m (juce::Slider::LinearHorizontal, juce::Slider::NoTextBox);
         m.setRange (0.0, 1.0, 0.0);
-        m.setPopupMenuEnabled (true);
         m.setValue (0.7, juce::dontSendNotification);
         parent.addAndMakeVisible (m);
         m.setBounds (0, 40, 200, 30);
         ValueEntry vm (m);
         const auto md = rightEvent (m, { 10.0f, 15.0f });
-        m.mouseDown (md);
         vm.mouseDown (md);
         vm.mouseUp (md);
         check (near (m.getValue(), 0.7), "no drag start seen: right-click does not restore a stale value");
