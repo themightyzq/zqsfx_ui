@@ -5,6 +5,31 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
+## [0.7.0] - unreleased
+
+### Added
+- Update notice. `update/UpdateCheck.h`: version comparison, the Version file reader, the
+  once-a-day decision, `UpdateSettings` (the user's answers, shared by every ZQ SFX product: one
+  small file per setting in `ZQ SFX/Updates/`, each replaced whole by an atomic rename, no locks)
+  and `UpdateChecker` (one per plugin binary; fetches at most once a day when an editor opens, and
+  once any product has checked that day the others skip; never downloads or installs). Closing a
+  window mid-check cancels the request instead of killing the thread. `ZQSFX_UPDATE_URL` may only
+  name an `https://` address. `components/UpdateNotice.h`: `UpdateNotice` wires a product's logo
+  to the checker and carries Get it, Later, Skip this version and the "Check for updates" switch;
+  every open notice in the binary updates at once. `UpdateNoticePanel` is the About-box block; under
+  260 px wide its buttons stack. `LogoMark::setUpdateAvailable` draws a "!" badge and adds
+  "(update available)" to the mark's tooltip and accessible text.
+- Hardening from review: a Version file nested deeper than 32 levels is refused before parsing (a
+  3 KB file of brackets crashed the host's background thread); an id that is not lower-case
+  letters and digits shows no offer, since Later and Skip could not hide it; a check claims the day
+  before fetching, so plugins opening together fetch once, and an unwritable settings folder still
+  fetches only once a day per process; a cancelled check hands the day back; writes retry a
+  locked file three times (Windows).
+- `UpdateTests` console test, run in CI.
+
+### Fixed
+- The module declaration's `version:` line read 0.5.0; it now matches the release.
+
 ## [0.6.1] - 2026-11-11
 
 ### Fixed

@@ -20,15 +20,24 @@ public:
     // "About <productName>". This is a real control (a real About-box trigger, not
     // decoration): consumers wire their About box through onClick.
     explicit LogoMark (const juce::String& productName)
-        : juce::Button (productName + " Logo")
+        : juce::Button (productName + " Logo"), aboutName (productName)
     {
-        const auto aboutText = "About " + productName;
-        setTooltip (aboutText);
-        setTitle (aboutText);
-        setDescription (aboutText);
-        setHelpText (aboutText);
+        applyAboutText();
         markOwnFocusRing (*this); // the mark lights up while it has keyboard focus
     }
+
+    // Small "!" badge at the top-right: a newer version of the product exists (see
+    // components/UpdateNotice.h). The accessible text says so too, so it is not colour alone.
+    void setUpdateAvailable (bool available)
+    {
+        if (available == updateAvailable)
+            return;
+        updateAvailable = available;
+        applyAboutText();
+        repaint();
+    }
+
+    bool isUpdateAvailable() const { return updateAvailable; }
 
     // The mark's inner letterforms close up below this height (style guide section 5).
     static int minimumHeight() { return geom::logoMinHeightPx; }
@@ -59,9 +68,33 @@ public:
         const bool lit = shouldDrawButtonAsHighlighted || hasKeyboardFocus (true);
         g.setColour (lit ? colour::logoBright : colour::silkCaption); // never accent
         g.fillPath (path);
+
+        if (updateAvailable)
+        {
+            // The badge is the one place the accent appears here; "never accent" above is about the mark.
+            const float d = juce::jmax (11.0f, juce::jmin (area.getWidth(), area.getHeight()) * 0.45f);
+            const auto badge = juce::Rectangle<float> (d, d).withRightX (area.getRight()).withY (area.getY());
+            g.setColour (colour::accent);
+            g.fillEllipse (badge);
+            g.setColour (colour::accentInk);
+            g.setFont (juce::Font (juce::FontOptions (d * 0.85f, juce::Font::bold)));
+            g.drawText ("!", badge.toNearestInt(), juce::Justification::centred, false);
+        }
     }
 
 private:
+    void applyAboutText()
+    {
+        const auto text = "About " + aboutName + (updateAvailable ? " (update available)" : "");
+        setTooltip (text);
+        setTitle (text);
+        setDescription (text);
+        setHelpText (text);
+    }
+
+    juce::String aboutName;
+    bool updateAvailable = false;
+
     static constexpr const char* pathData =
         "M995.95 802.79l-466.83 -802.79 933.66 0 -466.83 802.79zm369.85 -747l-353.07 0 0 607.16c"
         "117.88,-202.71 235.26,-404.57 353.07,-607.16zm-739.71 0l353.07 0 0 90.41 -133.32 165.83 "

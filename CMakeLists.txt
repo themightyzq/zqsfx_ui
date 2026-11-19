@@ -16,7 +16,7 @@ if (APPLE AND (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR))
     endif()
 endif()
 
-project (zqsfx_ui VERSION 0.6.1 LANGUAGES C CXX)
+project (zqsfx_ui VERSION 0.7.0 LANGUAGES C CXX)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -144,8 +144,17 @@ if (ZQSFX_UI_BUILD_DEMO)
         PRIVATE zqsfx::zqsfx_ui
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
+    juce_add_console_app (ZqsfxUiUpdateTests PRODUCT_NAME "ZqsfxUiUpdateTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uiupdatetests)
+    target_sources (ZqsfxUiUpdateTests PRIVATE tests/UpdateTests.cpp)
+    target_compile_definitions (ZqsfxUiUpdateTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_MODAL_LOOPS_PERMITTED=1 ZQSFX_UI_TESTING=1) # the test pumps the message loop itself
+    target_link_libraries (ZqsfxUiUpdateTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
     enable_testing()
     add_test (NAME TokenTests COMMAND ZqsfxUiTokenTests)
     add_test (NAME DialTests COMMAND ZqsfxUiDialTests)
     add_test (NAME FocusRingTests COMMAND ZqsfxUiFocusRingTests)
+    add_test (NAME UpdateTests COMMAND ZqsfxUiUpdateTests)
 endif()

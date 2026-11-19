@@ -30,7 +30,7 @@ FetchContent_MakeAvailable (JUCE)
 
 FetchContent_Declare (zqsfx_ui
     GIT_REPOSITORY https://github.com/themightyzq/zqsfx_ui.git
-    GIT_TAG v0.5.0
+    GIT_TAG v0.7.0
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable (zqsfx_ui)
 
@@ -154,6 +154,35 @@ module was extracted from for what each token means and where it is used.
   3-channel product uses `sky`, `yellow`, `purple`.
 - No red channel (red means clip/error) and no orange channel (orange is `accent`,
   meaning active).
+
+## Update notice
+
+A product can tell its user that a newer version exists, without downloading anything. When the
+editor opens, `UpdateNotice` checks a small JSON Version file at most once a day, in the
+background (`https://themightyzq.github.io/audio-tools/versions.json`, or the address in the
+`ZQSFX_UPDATE_URL` environment variable). If it names a newer version of your product, the
+`LogoMark` shows a "!" badge and the About box can show the offer. Failure of any kind is silent.
+
+```cpp
+// in the editor, after the logo exists; the product id is the key in the Version file
+logo = std::make_unique<zqsfx::ui::LogoMark> ("Worldizer");
+updateNotice = std::make_unique<zqsfx::ui::UpdateNotice> (*logo, "worldizer", JucePlugin_VersionString);
+
+// in the About box
+aboutPanel = std::make_unique<zqsfx::ui::UpdateNoticePanel> (*updateNotice);
+aboutPanel->setSize (width, aboutPanel->getIdealHeight());
+aboutPanel->onIdealHeightChanged = [this] { layOutAboutBox(); };
+```
+
+The panel shows "<Name> <version> is available" with Get it, Later (24 hours) and Skip this
+version, plus a "Check for updates" switch. The switch and the answers live in the folder
+`ZQ SFX/Updates/` in the user's application-data folder (`~/Library/Application Support` on a
+Mac) and are shared by every ZQ SFX product on the computer: turning the check off in one turns it
+off in all. Declare the product's own version as a dotted number ("0.0.12").
+
+What the check sends: it is an ordinary web request for that one file. GitHub, which hosts the
+page, sees the computer's internet address and the host app's standard browser identification.
+Nothing else is sent: no product list, no settings, no identifier.
 
 ## Accessibility floor
 

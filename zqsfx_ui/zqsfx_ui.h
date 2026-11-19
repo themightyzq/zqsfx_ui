@@ -6,7 +6,7 @@
 
   ID:                 zqsfx_ui
   vendor:             ZQ SFX
-  version:            0.5.0
+  version:            0.7.0
   name:               ZQ SFX shared UI
   description:        Shared design-system UI tokens, LookAndFeel, and controls for
                        every ZQ SFX JUCE product.
@@ -38,3 +38,5 @@
 #include "components/PhosphorScreen.h"
 #include "components/PeakMeter.h"
 #include "components/LogoMark.h"
+#include "update/UpdateCheck.h"
+#include "components/UpdateNotice.h"
