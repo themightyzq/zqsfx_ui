@@ -5,6 +5,31 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-11-19
+
+Findings from the first product to adopt 0.7 (Worldizer).
+
+### Added
+- `ZQSFX_UPDATE_URL=off` and `ZQSFX_UPDATE_SETTINGS_DIR=<absolute folder>` environment
+  variables: a product's own tests can keep the update check off the network and out of the real
+  settings folder (a headless editor test had stamped the real "last checked" date).
+- `PeakMeter`: a tooltip and title of the product's choosing, an optional fall
+  (`setFallDbPerSecond`, House value `houseFallDbPerSecond` = 20 dB/s), and `setResting` (an
+  empty well). `PeakMeterTests`.
+
+### Changed
+- `ActivityFlag` moved to `audio/ActivityFlag.h`, which needs only `juce_audio_basics`, so a
+  processor header no longer pulls in GUI code. `RestingDisplay.h` still includes it.
+
+### Fixed
+- `setDoubleClickDefault (slider, const RangedAudioParameter&)` now also gives a `Dial` its
+  parameter. Before, a product holding its parameter by const reference silently lost host
+  recording of typed values.
+- Removed the debug warning about a `Dial` with no parameter: it fired on knobs that are
+  deliberately not parameters.
+- Tests: `ValueEntryTests` crashed on Linux at exit; two `UpdateTests` checks assumed an idle
+  machine. CI now builds every test program.
+
 ## [0.7.0] - 2026-11-19
 
 ### Added

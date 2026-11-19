@@ -317,6 +317,18 @@ int main()
     }
 
     {
+        // 0.7.1 (Worldizer pilot F2): a Product holding its parameter by const reference picks
+        // the const overload; it must still give the Dial its parameter, or typed values reach
+        // the host with no gesture and touch-mode automation drops them.
+        Proc proc;
+        const juce::RangedAudioParameter& constParam = *proc.apvts.getParameter ("freq");
+        Dial dial;
+        juce::AudioProcessorValueTreeState::SliderAttachment att (proc.apvts, "freq", dial);
+        zqsfx::ui::setDoubleClickDefault (dial, constParam);
+        check (dial.valueEntry.hasParameter(), "the const-reference form also gives the Dial its parameter");
+    }
+
+    {
         // Fix 7: under a real AudioProcessorEditor the box goes on the editor.
         Proc proc;
         struct Ed : juce::AudioProcessorEditor

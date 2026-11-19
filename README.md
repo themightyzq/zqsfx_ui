@@ -30,7 +30,7 @@ FetchContent_MakeAvailable (JUCE)
 
 FetchContent_Declare (zqsfx_ui
     GIT_REPOSITORY https://github.com/themightyzq/zqsfx_ui.git
-    GIT_TAG v0.7.0
+    GIT_TAG v0.7.1
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable (zqsfx_ui)
 
@@ -155,6 +155,14 @@ zqsfx::ui::RestClock rest { *this, &processor.activity,
 // paint: if (rest.isResting()) { zqsfx::ui::drawRestingMark (g, area); return; }
 ```
 
+`ActivityFlag` lives in `zqsfx_ui/audio/ActivityFlag.h` and needs only `juce_audio_basics`, so a
+processor header includes that file and never the GUI headers.
+
+`PeakMeter` supports this directly: `meter.setResting (resting)` from the `RestClock` callback
+draws an empty well (a meter is too thin for the mark). For ballistics call
+`meter.setFallDbPerSecond (zqsfx::ui::PeakMeter::houseFallDbPerSecond)` (20 dB/s; the default 0
+means no fall). `PeakMeter ("Input level.")` sets the tooltip and accessible title.
+
 A display of settings (an envelope or filter curve) passes `nullptr` for the flag: it rests only
 while hidden, and keeps drawing its settings.
 
@@ -176,7 +184,8 @@ logo.onClick = [this]
 };
 ```
 
-It covers the window with a dimmed backdrop; Escape, Close or a click outside closes it. It uses
+The box makes its own update panel from `productId`; the product's `UpdateNotice` stays on the
+logo for the badge. It covers the window with a dimmed backdrop; Escape, Close or a click outside closes it. It uses
 the module's look whatever the Product's own LookAndFeel is.
 
 ## Tokens
@@ -217,17 +226,31 @@ background (`https://themightyzq.github.io/audio-tools/versions.json`, or the ad
 logo = std::make_unique<zqsfx::ui::LogoMark> ("Worldizer");
 updateNotice = std::make_unique<zqsfx::ui::UpdateNotice> (*logo, "worldizer", JucePlugin_VersionString);
 
-// in the About box
-aboutPanel = std::make_unique<zqsfx::ui::UpdateNoticePanel> (*updateNotice);
-aboutPanel->setSize (width, aboutPanel->getIdealHeight());
-aboutPanel->onIdealHeightChanged = [this] { layOutAboutBox(); };
 ```
+
+The product's own `UpdateNotice` is only for the badge on its logo. The House About box (below)
+carries its own update panel, made from `AboutInfo::productId`, so a product passes the id there
+and does not build an `UpdateNoticePanel` itself.
 
 The panel shows "<Name> <version> is available" with Get it, Later (24 hours) and Skip this
 version, plus a "Check for updates" switch. The switch and the answers live in the folder
 `ZQ SFX/Updates/` in the user's application-data folder (`~/Library/Application Support` on a
 Mac) and are shared by every ZQ SFX product on the computer: turning the check off in one turns it
 off in all. Declare the product's own version as a dotted number ("0.0.12").
+
+### Keeping a Product's tests off the network
+
+A Product's own tests are built without `ZQSFX_UI_TESTING`, so a headless editor test would
+otherwise fetch the real file and write `last-check` into the real
+`~/Library/Application Support/ZQ SFX/Updates` folder (which then skips the real check that day).
+Set two environment variables before the editor is created (the check starts when it opens):
+
+```cpp
+setenv ("ZQSFX_UPDATE_URL", "off", 1);                        // "off", any case: no thread, no fetch, no write, no badge
+setenv ("ZQSFX_UPDATE_SETTINGS_DIR", tempDir.getFullPathName().toRawUTF8(), 1); // absolute path only; else ignored
+```
+
+Any other value of `ZQSFX_UPDATE_URL` that is not an `https://` address is ignored.
 
 What the check sends: it is an ordinary web request for that one file. GitHub, which hosts the
 page, sees the computer's internet address and the host app's standard browser identification.

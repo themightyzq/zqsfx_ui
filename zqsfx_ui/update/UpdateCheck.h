@@ -269,6 +269,12 @@ public:
 
     static juce::File defaultFolder()
     {
+        // A Product's own tests set this (HOME does not help: JUCE reads NSHomeDirectory) so they
+        // never touch the real folder. A relative path is ignored: it would depend on the working directory.
+        const auto envDir = juce::SystemStats::getEnvironmentVariable ("ZQSFX_UPDATE_SETTINGS_DIR", {}).trim();
+        if (envDir.isNotEmpty() && juce::File::isAbsolutePath (envDir))
+            return juce::File (envDir);
+
         auto dir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory);
        #if JUCE_MAC
         dir = dir.getChildFile ("Application Support"); // JUCE returns ~/Library here
@@ -359,7 +365,7 @@ public:
     // Message thread. Starts at most one background fetch, and only when the decision says one is due.
     void requestCheck()
     {
-        if (isFetching() || ! settings.isEnabled())
+        if (isFetching() || ! settings.isEnabled() || isUrlOff())
             return;
         // The in-memory stamp keeps the once-a-day limit even when the settings folder cannot be written.
         const auto last = juce::jmax (settings.getLastCheckMs(), lastAttemptMs);
@@ -391,6 +397,17 @@ public:
         return decideUpdate (settings.isEnabled(), settings.getLastCheckMs(), juce::Time::currentTimeMillis(),
                              settings.getCachedFile(), productId, currentVersion,
                              settings.getLaterUntilMs (productId), settings.getSkippedVersion (productId));
+    }
+
+    // ZQSFX_UPDATE_URL=off (any case) keeps a Product's tests off the network: no thread, no fetch,
+    // no write. A test-only URL override still wins, so the module's own tests are unaffected.
+    static bool isUrlOff()
+    {
+       #if ZQSFX_UI_TESTING
+        if (testOverride().url.isNotEmpty())
+            return false;
+       #endif
+        return juce::SystemStats::getEnvironmentVariable ("ZQSFX_UPDATE_URL", {}).trim().equalsIgnoreCase ("off");
     }
 
     // The address to read. ZQSFX_UPDATE_URL may replace the default, but only with an https:// one.

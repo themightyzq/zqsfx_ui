@@ -9,7 +9,7 @@
 #include <zqsfx_ui/zqsfx_ui.h>
 
 #ifndef ZQSFX_UI_DEMO_VERSION
- #define ZQSFX_UI_DEMO_VERSION "0.7.0"
+ #define ZQSFX_UI_DEMO_VERSION "0.7.1"
 #endif
 
 namespace zqsfx::ui

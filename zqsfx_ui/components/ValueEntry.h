@@ -70,15 +70,6 @@ public:
 
         const auto value = slider.getRange().clipValue (slider.getValueFromText (trimmed));
 
-#if JUCE_DEBUG
-        // Only inside a plugin editor: an app's plain sliders have no host to tell.
-        if (parameter == nullptr && ! warnedNoParameter
-            && slider.findParentComponentOfClass<juce::AudioProcessorEditor>() != nullptr)
-        {
-            warnedNoParameter = true;
-            DBG ("ValueEntry: no parameter set, so the host will not record typed values; call setDoubleClickDefault (slider, apvts, id)");
-        }
-#endif
         // Nothing changes, so the host sees no gesture either.
         if (juce::approximatelyEqual (value, slider.getValue()))
             return true;
@@ -260,9 +251,6 @@ private:
     double valueBeforeClick = 0.0;
     bool swallowingPopupClick = false;
     bool dragStartSeen = false;
-#if JUCE_DEBUG
-    bool warnedNoParameter = false;
-#endif
 };
 
 // For a Product that keeps its own right-click menu: adds the two House items to it.

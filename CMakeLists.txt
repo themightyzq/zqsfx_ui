@@ -16,7 +16,7 @@ if (APPLE AND (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR))
     endif()
 endif()
 
-project (zqsfx_ui VERSION 0.7.0 LANGUAGES C CXX)
+project (zqsfx_ui VERSION 0.7.1 LANGUAGES C CXX)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -168,6 +168,14 @@ if (ZQSFX_UI_BUILD_DEMO)
         PRIVATE zqsfx::zqsfx_ui
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
+    juce_add_console_app (ZqsfxUiPeakMeterTests PRODUCT_NAME "ZqsfxUiPeakMeterTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uipeakmetertests)
+    target_sources (ZqsfxUiPeakMeterTests PRIVATE tests/PeakMeterTests.cpp)
+    target_compile_definitions (ZqsfxUiPeakMeterTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_MODAL_LOOPS_PERMITTED=1 ZQSFX_UI_TESTING=1)
+    target_link_libraries (ZqsfxUiPeakMeterTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
     juce_add_console_app (ZqsfxUiAboutBoxTests PRODUCT_NAME "ZqsfxUiAboutBoxTests" COMPANY_NAME "ZQ SFX"
         BUNDLE_ID com.zqsfx.uiaboutboxtests)
     target_sources (ZqsfxUiAboutBoxTests PRIVATE tests/AboutBoxTests.cpp)
@@ -183,5 +191,6 @@ if (ZQSFX_UI_BUILD_DEMO)
     add_test (NAME UpdateTests COMMAND ZqsfxUiUpdateTests)
     add_test (NAME ValueEntryTests COMMAND ZqsfxUiValueEntryTests)
     add_test (NAME RestingDisplayTests COMMAND ZqsfxUiRestingDisplayTests)
+    add_test (NAME PeakMeterTests COMMAND ZqsfxUiPeakMeterTests)
     add_test (NAME AboutBoxTests COMMAND ZqsfxUiAboutBoxTests)
 endif()

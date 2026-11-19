@@ -105,17 +105,17 @@ private:
 // Double-click returns the slider to the parameter's own default. Call it AFTER the slider
 // attachment exists: the attachment is what gives the slider its range. The default is
 // stored normalised, so it is converted back into the parameter's real units.
+//
+// It also tells a Dial's ValueEntry which parameter typed values go to, so the host records them
+// as one change. One overload on purpose: a Product holding its parameter by const reference
+// once picked a const-only form and silently lost host recording (Worldizer pilot, 0.7.1). A
+// parameter object is never itself const, and only its change gestures are called, so the
+// const_cast is safe.
 inline void setDoubleClickDefault (juce::Slider& slider, const juce::RangedAudioParameter& param)
 {
     slider.setDoubleClickReturnValue (true, param.convertFrom0to1 (param.getDefaultValue()));
-}
-
-// The non-const form also tells a Dial's ValueEntry which parameter to send gestures to.
-inline void setDoubleClickDefault (juce::Slider& slider, juce::RangedAudioParameter& param)
-{
-    setDoubleClickDefault (slider, static_cast<const juce::RangedAudioParameter&> (param));
     if (auto* dial = dynamic_cast<Dial*> (&slider))
-        dial->valueEntry.setParameter (&param);
+        dial->valueEntry.setParameter (const_cast<juce::RangedAudioParameter*> (&param));
 }
 
 inline void setDoubleClickDefault (juce::Slider& slider,

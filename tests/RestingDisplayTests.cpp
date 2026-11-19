@@ -1,6 +1,9 @@
 // RestingDisplayTests: ActivityFlag, RestClock and drawRestingMark.
 // Exit 0 on pass, 1 on any failure.
 
+// Deliberately first and alone: ActivityFlag.h must compile without zqsfx_ui.h or any GUI header.
+#include <zqsfx_ui/audio/ActivityFlag.h>
+
 #include <atomic>
 #include <cstdlib>
 #include <iostream>
@@ -44,6 +47,12 @@ int main()
 {
     juce::ScopedJuceInitialiser_GUI gui;
     using namespace zqsfx::ui;
+
+    {
+        ActivityFlag standalone;
+        standalone.notePeak (0.5f);
+        check (standalone.loudBlockCount() == 1, "ActivityFlag.h alone: notePeak counts a loud peak");
+    }
 
     {
         juce::Component display;

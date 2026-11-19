@@ -520,6 +520,42 @@ int main()
         dir.deleteRecursively();
     }
 
+    // ---- environment switches for a Product's own tests (no ZQSFX_UI_TESTING in the Product)
+    {
+        const auto realDefault = UpdateSettings::defaultFolder();
+        auto dir = makeTemp ("zqsfx_update_env_");
+        dir.createDirectory();
+        auto envDir = dir.getChildFile ("Updates");
+
+        setenv ("ZQSFX_UPDATE_SETTINGS_DIR", envDir.getFullPathName().toRawUTF8(), 1);
+        check (UpdateSettings::defaultFolder() == envDir, "env: an absolute settings dir replaces the default folder");
+        setenv ("ZQSFX_UPDATE_SETTINGS_DIR", "rel/dir", 1);
+        check (UpdateSettings::defaultFolder() == realDefault, "env: a relative settings dir is ignored");
+        setenv ("ZQSFX_UPDATE_SETTINGS_DIR", "", 1);
+        check (UpdateSettings::defaultFolder() == realDefault, "env: an empty settings dir is ignored");
+        unsetenv ("ZQSFX_UPDATE_SETTINGS_DIR");
+
+        for (const char* off : { "off", "OFF" })
+        {
+            setenv ("ZQSFX_UPDATE_URL", off, 1);
+            setenv ("ZQSFX_UPDATE_SETTINGS_DIR", envDir.getFullPathName().toRawUTF8(), 1);
+            UpdateChecker::testFetchCount() = 0;
+            {
+                LogoMark logo ("Worldizer");
+                UpdateNotice notice (logo, "worldizer", "0.0.1");
+                pump (500);
+                check (UpdateChecker::testFetchCount() == 0, (juce::String ("env: URL=") + off + " starts no fetch").toRawUTF8());
+                check (! logo.isUpdateAvailable(), (juce::String ("env: URL=") + off + " shows no badge").toRawUTF8());
+                juce::SharedResourcePointer<UpdateChecker> c;
+                check (! c->isFetchThreadRunning(), (juce::String ("env: URL=") + off + " starts no thread").toRawUTF8());
+            }
+            check (! envDir.exists(), (juce::String ("env: URL=") + off + " writes nothing").toRawUTF8());
+        }
+        unsetenv ("ZQSFX_UPDATE_URL");
+        unsetenv ("ZQSFX_UPDATE_SETTINGS_DIR");
+        dir.deleteRecursively();
+    }
+
     std::cout << "UpdateTests: " << failures << " failures\n";
     return failures == 0 ? 0 : 1;
 }
