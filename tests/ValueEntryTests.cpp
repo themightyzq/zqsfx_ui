@@ -336,6 +336,10 @@ int main()
         if (box != nullptr) box->onEscapeKey();
     }
 
+    // Closed text boxes are deleted on the next message-loop turn. Let those run now: left for
+    // shutdown, they are destroyed after JUCE's Desktop, which crashes on Linux.
+    juce::MessageManager::getInstance()->runDispatchLoopUntil (100);
+
     std::cout << "ValueEntryTests: " << failures << " failures\n";
     return failures == 0 ? 0 : 1;
 }

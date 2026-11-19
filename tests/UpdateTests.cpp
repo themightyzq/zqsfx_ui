@@ -249,8 +249,11 @@ int main()
             UpdateNotice notice (logo, "worldizer", "0.0.11");
             std::unique_ptr<UpdateNotice> notice2;
             check (! logo.isUpdateAvailable(), "e2e: no badge at construction");
-            pump (200);
-            check (! logo.isUpdateAvailable() && UpdateChecker::testFetchCount() == 1,
+            // Wait for the fetch thread rather than a fixed 200 ms: on a loaded machine it can
+            // start later than that (seen in the commit gate while a product was building).
+            const bool started = waitFor ([] { return UpdateChecker::testFetchCount() == 1; });
+            pump (50);
+            check (started && ! logo.isUpdateAvailable() && UpdateChecker::testFetchCount() == 1,
                    "e2e: no badge while the fetch is held (and one fetch started)");
             UpdateChecker::testHoldFetch() = false;
 
@@ -408,7 +411,9 @@ int main()
             notice.reset(); // last holder: the checker is destroyed here
             const auto ms = juce::Time::getMillisecondCounterHiRes() - t0;
             std::cout << "hung: teardown took " << ms << " ms\n";
-            check (ms < 500.0, "hung: destroying the last notice returns in under 500 ms");
+            // The fault this catches is teardown waiting out the 6 s join; 2 s leaves room for a
+            // loaded machine (500 ms failed under load) while still telling the two apart.
+            check (ms < 2000.0, "hung: destroying the last notice returns in under 2 s");
             logo.reset();
         }
         UpdateChecker::testOverride() = {};
