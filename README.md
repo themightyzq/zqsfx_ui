@@ -30,7 +30,7 @@ FetchContent_MakeAvailable (JUCE)
 
 FetchContent_Declare (zqsfx_ui
     GIT_REPOSITORY https://github.com/themightyzq/zqsfx_ui.git
-    GIT_TAG v0.7.1
+    GIT_TAG v0.7.3
     GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable (zqsfx_ui)
 
@@ -195,9 +195,13 @@ change nothing); switching the target while resting puts the old text back first
 `RestClock` checks four times a second, so a meter that reads a decaying level after waking can
 miss a short hit. Read `ActivityFlag::takePeak()` instead: it returns the loudest peak since the
 last call and clears it, so the hit shows its real peak. It consumes, so give it exactly one
-reader (unlike `loudBlockCount`, which any number of displays can read). It also keeps the
-loudest peak from the whole time the meter was hidden or resting, so call `takePeak()` once and
-discard the result when the `RestClock` wakes the meter.
+reader (unlike `loudBlockCount`, which any number of displays can read). Call
+`rest.setPeakReader (true)` on that meter's own `RestClock` (one per flag, never a scope's):
+while the meter rests, the clock drops the held peak four times a second, except on the poll
+that wakes it, so the first `takePeak()` after waking returns the hit that woke the meter and
+nothing older. A peak played while the window was hidden or closed is not shown. Do not discard
+`takePeak()` on wake: that throws the waking hit away, and a lone one-shot after rest never
+shows (before 0.7.3 the README said to; remove that line when you move to 0.7.3).
 
 A Product's tests have no message loop, so they call `rest.poll()` themselves and fix the time
 with `rest.setClockForTesting (...)` and `rest.setShowingForTesting (true)` (always available,

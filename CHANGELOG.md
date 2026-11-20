@@ -5,6 +5,21 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-11-20
+
+### Fixed
+- A resting meter missed the single hit that woke it: the README told it to discard
+  `takePeak()` on wake, which threw that hit away with the old peak (a -40 dB one-shot after
+  rest read the -60 dB floor). New `RestClock::setPeakReader (true)` for the meter's clock: while
+  resting it drops the held peak at each poll except the one that wakes the meter, so the
+  waking hit is shown and a peak played while hidden or before the editor opened is not.
+  `ActivityFlag::returnPeak` puts a taken peak back without counting a loud block.
+  The poll that first shows a hidden meter gives nothing back, so a peak played while hidden
+  never flashes up. Products: call `setPeakReader (true)` and remove the discard on wake.
+  `RestingDisplayTests`.
+- `takePeak()` now reads with acquire ordering and a new peak is stored with release ordering,
+  so on Apple Silicon a poll that sees a hit's peak also sees its loud-block count.
+
 ## [0.7.2] - 2026-11-19
 
 Findings from product re-releases that adopted 0.7.1.

@@ -296,6 +296,92 @@ int main()
         check (g.takePeak() == 0.8f, "takePeak: a short burst after silence is still returned");
     }
 
+    // The meter's clock (setPeakReader): the hit that wakes a resting meter is shown, and a peak
+    // held while the meter was hidden or closed is not. AT-61: a -40 dB waking block read the floor.
+    {
+        juce::Component display;
+        ActivityFlag flag;
+        double now = 0.0;
+        RestClock clock (display, &flag, nullptr);
+        clock.setClockForTesting ([&] { return now; });
+        clock.setShowingForTesting (true);
+        clock.setPeakReader (true);
+        now = RestClock::holdSeconds + 1.0;
+        clock.poll();
+        check (clock.isResting(), "meter: resting after the hold");
+        now += 0.25;
+        clock.poll();                            // a resting poll with nothing new
+        const auto countBefore = flag.loudBlockCount();
+        flag.notePeak (0.01f);                   // a lone -40 dB one-shot
+        now += 0.25;
+        clock.poll();
+        check (! clock.isResting(), "meter: the hit wakes the clock");
+        check (flag.loudBlockCount() == countBefore + 1, "meter: waking adds no loud block of its own");
+        check (flag.takePeak() == 0.01f, "meter: the hit that woke the meter is shown");
+    }
+
+    {
+        juce::Component display;
+        ActivityFlag flag;
+        double now = 0.0;
+        RestClock clock (display, &flag, nullptr);
+        clock.setClockForTesting ([&] { return now; });
+        clock.setShowingForTesting (false);
+        clock.setPeakReader (true);
+        clock.poll();
+        check (clock.isResting(), "hidden: resting");
+        flag.notePeak (0.9f);                    // loud while nobody could see it, the same
+        clock.setShowingForTesting (true);       // quarter second the window is shown
+        now += 0.25;
+        clock.poll();
+        check (! clock.isResting(), "hidden: showing wakes the clock");
+        check (flag.takePeak() == 0.0f, "hidden: the loud peak from while hidden is not shown");
+        flag.notePeak (0.01f);
+        check (flag.takePeak() == 0.01f, "hidden: once shown, the meter reads what plays");
+    }
+
+    {
+        // A new editor opens on a flag that held a peak from before it existed.
+        juce::Component display;
+        ActivityFlag flag;
+        flag.notePeak (0.9f);
+        RestClock clock (display, &flag, nullptr);
+        clock.setClockForTesting ([] { return 0.0; });
+        clock.setShowingForTesting (true);
+        clock.setPeakReader (true);
+        check (flag.takePeak() == 0.0f, "reopen: a peak from before the editor opened is dropped");
+    }
+
+    {
+        // Only the meter's clock touches the peak: a scope's clock on the same flag leaves it alone,
+        // and so does the meter's clock while awake (the meter's own timer reads it then).
+        juce::Component meterDisplay, scopeDisplay;
+        ActivityFlag flag;
+        double now = 0.0;
+        RestClock meterClock (meterDisplay, &flag, nullptr);
+        RestClock scopeClock (scopeDisplay, &flag, nullptr);
+        for (auto* c : { &meterClock, &scopeClock })
+        {
+            c->setClockForTesting ([&] { return now; });
+            c->setShowingForTesting (true);
+        }
+        meterClock.setPeakReader (true);
+        flag.notePeak (0.5f);
+        now += 0.25;
+        scopeClock.poll();
+        meterClock.poll();
+        check (! meterClock.isResting(), "awake: still awake");
+        check (flag.takePeak() == 0.5f, "awake: neither clock consumed the peak");
+        now = RestClock::holdSeconds + 1.0;
+        meterClock.poll();
+        scopeClock.poll();
+        check (scopeClock.isResting(), "scope: resting");
+        flag.notePeak (0.00005f);                // -86 dB, below the -80 dB silence line: not loud
+        now += 0.25;
+        scopeClock.poll();                       // a resting poll: the one that would drop
+        check (flag.takePeak() == 0.00005f, "scope: a clock without setPeakReader never drops the peak");
+    }
+
     std::cout << (failures == 0 ? "ALL PASS" : "FAILURES") << "\n";
     return failures == 0 ? 0 : 1;
 }

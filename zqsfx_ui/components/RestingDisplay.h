@@ -62,9 +62,25 @@ public:
         descriptionTarget = c;
     }
 
+    // Call with true on the clock of the display that reads the flag's takePeak() (a meter):
+    // exactly one such clock per flag. While resting, each poll drops the held peak unless that
+    // poll wakes the display, so on waking takePeak() returns the hit that woke it and nothing
+    // older (a peak played while hidden is not shown). Turning it on also drops the peak held
+    // before this clock existed: a reopened editor starts clean.
+    void setPeakReader (bool isTheMeter)
+    {
+        peakReader = isTheMeter && flag != nullptr;
+        if (peakReader)
+            flag->takePeak();
+    }
+
     void poll()
     {
         const double t = now();
+        // Take before reading the count: notePeak counts a block before it stores the peak, so a
+        // hit is either in `dropped` and counted, or still held. Awake, the meter reads the peak.
+        const bool dropping = peakReader && resting;
+        const float dropped = dropping ? flag->takePeak() : 0.0f;
         bool loud = true; // no flag: only hiding can rest the display
         if (flag != nullptr)
         {
@@ -78,6 +94,11 @@ public:
         const bool showing = isShowing();
         const bool silent = t - lastLoud >= holdSeconds;
         const bool shouldRest = ! showing || silent;
+        // Waking: give back the hit that woke it, before onChange. Not on the poll that first shows
+        // the display: what it took was played while hidden.
+        if (dropping && ! shouldRest && wasShowing)
+            flag->returnPeak (dropped);
+        wasShowing = showing;
 
         // "No sound" only when silence is the reason; a hidden display leaves its description alone.
         if (shouldRest && showing && ! describedAsSilent && descriptionTarget != nullptr)
@@ -129,6 +150,8 @@ private:
     std::function<void (bool)> onChange;
     bool resting = false;
     bool describedAsSilent = false;
+    bool peakReader = false;
+    bool wasShowing = true;
     juce::String savedDescription;
     double lastLoud = 0.0;
     uint32_t lastCount = 0;
