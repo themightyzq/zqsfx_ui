@@ -5,6 +5,38 @@ values only change in a major version (see README.md "Versioning").
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-11-19
+
+Findings from product re-releases that adopted 0.7.1.
+
+### Added
+- `Knob` takes a `parse` argument after `fmt`. With a `fmt` and no `parse` it installs a default
+  reader, `parseReadoutText` ("50 %", "10.3 kHz", "2k", "1,000 Hz", "10,5", "Tonal 50", "- 5",
+  "-6 dB", "-inf").
+  It covers readouts in those shapes only; a `fmt` that changes units or names a side ("1.20 s",
+  "L 30 %") must pass its own `parse` (README, "Typing a value"). `KnobTests`.
+- `RestClock::setDescriptionTarget`: choose which component says "No sound" (`nullptr` for none).
+- `ActivityFlag::takePeak()`: the loudest peak since the last call, so a meter shows the real
+  peak of a short hit after rest. One reader only.
+- `PeakMeter::setFillColour`: a solid fill for a meter whose colour carries meaning.
+- README: typing needs `EDITOR_WANTS_KEYBOARD_FOCUS TRUE`; custom readouts need a matching
+  parser; Linux builds (`JUCE_USE_CURL=0`) never show an update notice.
+
+### Fixed
+- Typing a 0..1 knob's "50 %" gave 1.0, and "10.3 kHz" clamped to the range floor, because the
+  typed text was read by the parameter's plain parser, not the knob's readout.
+- Typing a word readout such as "Off" or "-inf" was refused for lack of a digit. It is now
+  accepted when the slider shows the same word back for the value it read.
+- Opening "Type a value" and closing it without typing no longer applies the shown text, so a
+  readout that rounds or names a span ("Off") can no longer move the knob on its own, and a
+  stale readout cannot drag it back against host automation.
+- A word typed without its unit ("-inf" for a readout "-inf dB") is accepted.
+- `RestClock` gives a description target that outlives it its own text back when it is destroyed.
+- `RestClock`'s description target is a safe pointer: a target deleted first is forgotten, not
+  used after it is gone.
+- `RestClock::setClockForTesting` and `setShowingForTesting` are always available, so a
+  Product's tests (built without `ZQSFX_UI_TESTING`, no message loop) can call `poll()`.
+
 ## [0.7.1] - 2026-11-19
 
 Findings from the first product to adopt 0.7 (Worldizer).

@@ -7,6 +7,7 @@
 // own audio-thread-to-UI relay, however that product does it) via setLevelDb().
 
 #include <functional>
+#include <optional>
 #include <juce_gui_basics/juce_gui_basics.h>
 #include "../tokens/Tokens.h"
 
@@ -70,6 +71,17 @@ public:
         }
     }
 
+    // A solid fill colour instead of the meterLo/Mid/Hi gradient, for a meter whose colour carries
+    // meaning (a channel, a category). The meterHot part above -6 dB still draws. std::nullopt
+    // returns to the gradient.
+    void setFillColour (std::optional<juce::Colour> c)
+    {
+        if (c == fillColour)
+            return;
+        fillColour = c;
+        repaint();
+    }
+
     // The level as drawn (after any fall), in dBFS.
     float getLevelDb() const noexcept { return lastDb; }
 
@@ -112,9 +124,14 @@ public:
         // Gradient stops anchored to the WELL's full range (not the current fill height)
         // so the colour at a given dB position never shifts as the level moves - like a
         // printed gradient behind glass, revealed by the fill.
-        juce::ColourGradient grad (colour::meterLo, inner.getBottomLeft(), colour::meterHi, inner.getTopLeft(), false);
-        grad.addColour (0.70, colour::meterMid);
-        g.setGradientFill (grad);
+        if (fillColour.has_value())
+            g.setColour (*fillColour);
+        else
+        {
+            juce::ColourGradient grad (colour::meterLo, inner.getBottomLeft(), colour::meterHi, inner.getTopLeft(), false);
+            grad.addColour (0.70, colour::meterMid);
+            g.setGradientFill (grad);
+        }
         g.fillRect (fillRect);
 
         if (fillRect.getY() < threshY)
@@ -145,6 +162,7 @@ private:
     float lastDb = loDb;
     float fallDbPerSec = 0.0f;
     bool resting = false;
+    std::optional<juce::Colour> fillColour;
     bool haveLastTime = false;
     double lastTimeSec = 0.0;
    #if ZQSFX_UI_TESTING

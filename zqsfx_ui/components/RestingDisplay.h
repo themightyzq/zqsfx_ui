@@ -30,7 +30,7 @@ public:
 
     // flag == nullptr: the display rests only while hidden. Starts awake; the first evaluation is the first timer tick or an explicit poll().
     RestClock (juce::Component& displayToWatch, ActivityFlag* activity, std::function<void (bool resting)> onChangeCallback)
-        : display (displayToWatch), flag (activity), onChange (std::move (onChangeCallback))
+        : display (displayToWatch), descriptionTarget (&displayToWatch), flag (activity), onChange (std::move (onChangeCallback))
     {
         // No poll here: onChange must not run while the owning display is still being constructed.
         lastLoud = now();
@@ -39,9 +39,28 @@ public:
         startTimerHz (checkHz);
     }
 
-    ~RestClock() override { stopTimer(); }
+    ~RestClock() override
+    {
+        stopTimer();
+        // A target other than the display may outlive this clock: give it its own text back.
+        if (describedAsSilent && descriptionTarget != nullptr)
+            descriptionTarget->setDescription (savedDescription);
+    }
 
     bool isResting() const noexcept { return resting; }
+
+    // Which component's accessible description says "No sound" (default: the watched display).
+    // nullptr: no description is ever changed. Changing it while "No sound" is applied puts the
+    // old target's own description back first. A target deleted first is simply forgotten.
+    void setDescriptionTarget (juce::Component* c)
+    {
+        if (c == descriptionTarget)
+            return;
+        if (describedAsSilent && descriptionTarget != nullptr)
+            descriptionTarget->setDescription (savedDescription);
+        describedAsSilent = false;
+        descriptionTarget = c;
+    }
 
     void poll()
     {
@@ -61,15 +80,16 @@ public:
         const bool shouldRest = ! showing || silent;
 
         // "No sound" only when silence is the reason; a hidden display leaves its description alone.
-        if (shouldRest && showing && ! describedAsSilent)
+        if (shouldRest && showing && ! describedAsSilent && descriptionTarget != nullptr)
         {
-            savedDescription = display.getDescription();
-            display.setDescription ("No sound");
+            savedDescription = descriptionTarget->getDescription();
+            descriptionTarget->setDescription ("No sound");
             describedAsSilent = true;
         }
         else if (! shouldRest && describedAsSilent)
         {
-            display.setDescription (savedDescription);
+            if (descriptionTarget != nullptr)
+                descriptionTarget->setDescription (savedDescription);
             describedAsSilent = false;
         }
 
@@ -81,33 +101,30 @@ public:
         }
     }
 
-   #if ZQSFX_UI_TESTING
+    // A product's tests build without a message loop and call poll() themselves; these make that
+    // deterministic. Always available, not only under ZQSFX_UI_TESTING.
     void setClockForTesting (std::function<double()> nowSeconds) { testClock = std::move (nowSeconds); lastLoud = now(); }
     void setShowingForTesting (std::optional<bool> showing) { testShowing = showing; }
-   #endif
 
 private:
     void timerCallback() override { poll(); }
 
     double now() const
     {
-       #if ZQSFX_UI_TESTING
         if (testClock)
             return testClock();
-       #endif
         return juce::Time::getMillisecondCounterHiRes() * 0.001;
     }
 
     bool isShowing() const
     {
-       #if ZQSFX_UI_TESTING
         if (testShowing.has_value())
             return *testShowing;
-       #endif
         return display.isShowing();
     }
 
     juce::Component& display;
+    juce::Component::SafePointer<juce::Component> descriptionTarget; // goes null if the target is deleted first
     ActivityFlag* flag;
     std::function<void (bool)> onChange;
     bool resting = false;
@@ -115,10 +132,8 @@ private:
     juce::String savedDescription;
     double lastLoud = 0.0;
     uint32_t lastCount = 0;
-   #if ZQSFX_UI_TESTING
     std::function<double()> testClock;
     std::optional<bool> testShowing;
-   #endif
 };
 
 // The mark, centred, small and dim, for a display of live sound that is resting.

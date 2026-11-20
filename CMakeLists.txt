@@ -16,7 +16,7 @@ if (APPLE AND (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR))
     endif()
 endif()
 
-project (zqsfx_ui VERSION 0.7.1 LANGUAGES C CXX)
+project (zqsfx_ui VERSION 0.7.2 LANGUAGES C CXX)
 
 set (CMAKE_CXX_STANDARD 17)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -136,6 +136,14 @@ if (ZQSFX_UI_BUILD_DEMO)
         PRIVATE zqsfx::zqsfx_ui
         PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
+    juce_add_console_app (ZqsfxUiKnobTests PRODUCT_NAME "ZqsfxUiKnobTests" COMPANY_NAME "ZQ SFX"
+        BUNDLE_ID com.zqsfx.uiknobtests)
+    target_sources (ZqsfxUiKnobTests PRIVATE tests/KnobTests.cpp)
+    target_compile_definitions (ZqsfxUiKnobTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
+    target_link_libraries (ZqsfxUiKnobTests
+        PRIVATE zqsfx::zqsfx_ui
+        PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
+
     juce_add_console_app (ZqsfxUiFocusRingTests PRODUCT_NAME "ZqsfxUiFocusRingTests" COMPANY_NAME "ZQ SFX"
         BUNDLE_ID com.zqsfx.uifocusringtests)
     target_sources (ZqsfxUiFocusRingTests PRIVATE tests/FocusRingTests.cpp)
@@ -187,6 +195,7 @@ if (ZQSFX_UI_BUILD_DEMO)
     enable_testing()
     add_test (NAME TokenTests COMMAND ZqsfxUiTokenTests)
     add_test (NAME DialTests COMMAND ZqsfxUiDialTests)
+    add_test (NAME KnobTests COMMAND ZqsfxUiKnobTests)
     add_test (NAME FocusRingTests COMMAND ZqsfxUiFocusRingTests)
     add_test (NAME UpdateTests COMMAND ZqsfxUiUpdateTests)
     add_test (NAME ValueEntryTests COMMAND ZqsfxUiValueEntryTests)

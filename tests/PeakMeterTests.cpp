@@ -90,6 +90,24 @@ int main()
         check (render (m).getPixelAt (x, y) != wellPixel, "waking draws the bar again");
     }
 
+    {
+        PeakMeter m;
+        m.setBounds (0, 0, 16, 130);
+        m.setLevelDb (-20.0f);
+        // -20 dB: bar top is well below the -6 dB threshold; sample inside the fill near the bottom.
+        auto pixel = [&]
+        {
+            juce::Image img (juce::Image::ARGB, 16, 130, true);
+            juce::Graphics g (img);
+            m.paint (g);
+            return img.getPixelAt (10, 120);
+        };
+        m.setFillColour (juce::Colours::purple);
+        check (pixel() == juce::Colours::purple, "fill colour: a fill pixel below -6 dB is the solid colour");
+        m.setFillColour (std::nullopt);
+        check (pixel() != juce::Colours::purple, "fill colour: nullopt returns to the gradient");
+    }
+
     std::cout << (failures == 0 ? "ALL PASS" : "FAILURES") << "\n";
     return failures == 0 ? 0 : 1;
 }

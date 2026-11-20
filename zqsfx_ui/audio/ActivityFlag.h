@@ -29,12 +29,25 @@ public:
     {
         if (linearPeak >= juce::Decibels::decibelsToGain (silenceDb))
             loudBlocks.fetch_add (1, std::memory_order_relaxed);
+
+        auto held = heldPeak.load (std::memory_order_relaxed);
+        while (linearPeak > held
+               && ! heldPeak.compare_exchange_weak (held, linearPeak, std::memory_order_relaxed))
+        {}
     }
+
+    // The loudest peak since the last call, then cleared. For exactly ONE reader (a meter): it
+    // consumes, unlike loudBlockCount, so two readers would each see only part of the signal.
+    // RestClock polls four times a second, so a meter that reads this after waking still shows
+    // the real peak of a short hit.
+    float takePeak() noexcept { return heldPeak.exchange (0.0f, std::memory_order_relaxed); }
 
     uint32_t loudBlockCount() const noexcept { return loudBlocks.load (std::memory_order_relaxed); }
 
 private:
     static_assert (std::atomic<uint32_t>::is_always_lock_free, "ActivityFlag must be lock-free");
+    static_assert (std::atomic<float>::is_always_lock_free, "ActivityFlag must be lock-free");
     std::atomic<uint32_t> loudBlocks { 0 };
+    std::atomic<float> heldPeak { 0.0f };
 };
 } // namespace zqsfx::ui

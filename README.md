@@ -140,6 +140,27 @@ A subclass that already has its own right-click menu keeps it and adds the House
 zqsfx::ui::addValueEntryItems (menu, mySlider.valueEntry); // mySlider is a Dial subclass
 ```
 
+**Typing needs keyboard focus.** Set `EDITOR_WANTS_KEYBOARD_FOCUS TRUE` in the product's
+`juce_add_plugin`. With FALSE the VST3 window ignores keys and the AU view refuses focus, so the
+text box opens but cannot be typed into.
+
+**Every custom readout needs a matching parser.** Typed text is read back through the slider's
+text-to-value conversion, so a parameter or slider with a custom readout ("50 %", "10.3 kHz",
+"Off") must also say how to read it, or the typed readout sets the wrong value. Use `Knob`'s
+`parse` argument (after `fmt`), `withValueFromStringFunction` on the parameter, or
+`slider.valueFromTextFunction`. `Knob` with a `fmt` and no `parse` installs a default reader,
+`zqsfx::ui::parseReadoutText`. It reads the first number in the text (skipping a label before it,
+such as "Tonal 50"; keeping a sign before it, "- 5" included; reading "1,000" as a thousands
+comma and "10,5" as a decimal comma), multiplies by 1000 for a `k` right
+after the number ("10.3 kHz", "2k"), divides by 100 for `%` only when the range lies inside
+-1..1, and reads "-inf" as the bottom of the range. Any other unit text is ignored. So a `fmt`
+that changes units ("1.20 s" for a millisecond parameter), shows a side or sign as a word
+("L 30 %"), shows `%` on a range wider than -1..1 ("150 %" on 0..2), or shows kHz for a
+parameter already measured in kHz must pass its own `parse`. Words with no digits ("Off", "-inf") are
+accepted when the slider shows the same word back for the value it read, alone or followed by a
+unit ("-inf dB"). Opening the box and closing it without typing never moves the knob; anything
+typed, even the same text, is applied.
+
 ## Resting displays
 
 A display of live sound (meter, scope, spectrum, waveform) stops animating while it is hidden,
@@ -162,6 +183,25 @@ processor header includes that file and never the GUI headers.
 draws an empty well (a meter is too thin for the mark). For ballistics call
 `meter.setFallDbPerSecond (zqsfx::ui::PeakMeter::houseFallDbPerSecond)` (20 dB/s; the default 0
 means no fall). `PeakMeter ("Input level.")` sets the tooltip and accessible title.
+
+`PeakMeter::setFillColour (skin.noiseColour)` (a colour from the Product's Skin) gives a meter whose colour carries meaning a
+solid fill instead of the gradient (the amber above -6 dB still draws); `std::nullopt` returns to
+the gradient.
+
+`RestClock` relabels the display's accessible description "No sound" while it rests on silence.
+`rest.setDescriptionTarget (&other)` chooses a different component to carry that text (`nullptr`:
+change nothing); switching the target while resting puts the old text back first.
+
+`RestClock` checks four times a second, so a meter that reads a decaying level after waking can
+miss a short hit. Read `ActivityFlag::takePeak()` instead: it returns the loudest peak since the
+last call and clears it, so the hit shows its real peak. It consumes, so give it exactly one
+reader (unlike `loudBlockCount`, which any number of displays can read). It also keeps the
+loudest peak from the whole time the meter was hidden or resting, so call `takePeak()` once and
+discard the result when the `RestClock` wakes the meter.
+
+A Product's tests have no message loop, so they call `rest.poll()` themselves and fix the time
+with `rest.setClockForTesting (...)` and `rest.setShowingForTesting (true)` (always available,
+no `ZQSFX_UI_TESTING` needed).
 
 A display of settings (an envelope or filter curve) passes `nullptr` for the flag: it rests only
 while hidden, and keeps drawing its settings.
@@ -255,6 +295,9 @@ Any other value of `ZQSFX_UPDATE_URL` that is not an `https://` address is ignor
 What the check sends: it is an ordinary web request for that one file. GitHub, which hosts the
 page, sees the computer's internet address and the host app's standard browser identification.
 Nothing else is sent: no product list, no settings, no identifier.
+
+Products build with `JUCE_USE_CURL=0`, so on Linux the check never succeeds (silently and
+safely) and Linux users see no update notice.
 
 ## Accessibility floor
 

@@ -133,7 +133,7 @@ int main()
         {
             check (ed->getText() == dial.getTextFromValue (dial.getValue()), "editor starts with the knob's text");
             check (ed->getTitle() == "Type a value for Cutoff", "editor title names the knob");
-            ed->setText ("5 kHz", false);
+            ed->setText ("5 kHz", false); ed->onTextChange(); // as if typed
             ed->onReturnKey();
             check (near (dial.getValue(), 5000.0), "Return applies the typed value");
             check (dial.valueEntry.getOpenEditor() == nullptr, "Return closes the editor");
@@ -144,7 +144,7 @@ int main()
         check (dial.valueEntry.getOpenEditor() != nullptr, "opening twice keeps one editor");
         if (auto* e2 = dial.valueEntry.getOpenEditor())
         {
-            e2->setText ("100", false);
+            e2->setText ("100", false); e2->onTextChange(); // as if typed
             e2->onEscapeKey();
         }
         check (near (dial.getValue(), 5000.0) && dial.valueEntry.getOpenEditor() == nullptr, "Escape cancels and closes");
@@ -152,12 +152,48 @@ int main()
         dial.valueEntry.openEditor();
         if (auto* e3 = dial.valueEntry.getOpenEditor())
         {
-            e3->setText ("700", false);
+            e3->setText ("700", false); e3->onTextChange(); // as if typed
             e3->onFocusLost();
         }
         check (near (dial.getValue(), 700.0) && dial.valueEntry.getOpenEditor() == nullptr, "losing focus applies and closes");
 
         param->removeListener (&log);
+    }
+
+    {
+        // A readout that rounds: opening the box and closing it untouched must not snap the value.
+        juce::Component parent;
+        parent.setSize (200, 100);
+        Dial d;
+        parent.addAndMakeVisible (d);
+        d.setBounds (60, 20, 60, 60);
+        d.setRange (0.0, 1.0, 0.0);
+        d.textFromValueFunction = [] (double v) { return juce::String (juce::roundToInt (v * 100.0)) + " %"; };
+        d.valueFromTextFunction = [] (const juce::String& t) { return t.getDoubleValue() / 100.0; };
+        d.setValue (0.503, juce::dontSendNotification);
+        d.valueEntry.openEditor();
+        if (auto* e = d.valueEntry.getOpenEditor())
+            e->onFocusLost();
+        check (near (d.getValue(), 0.503), "untouched text: closing the box leaves a rounded value alone");
+        d.valueEntry.openEditor();
+        if (auto* e = d.valueEntry.getOpenEditor())
+        {
+            e->setText ("40 %", false); e->onTextChange(); // as if typed
+            e->onReturnKey();
+        }
+        check (near (d.getValue(), 0.4), "changed text: closing the box applies it");
+        d.setValue (0.503, juce::dontSendNotification);
+        d.valueEntry.openEditor();
+        if (auto* e = d.valueEntry.getOpenEditor())
+        {
+            e->setText ("50 %", false); e->onTextChange(); // retyped, same text as shown
+            e->onReturnKey();
+        }
+        check (near (d.getValue(), 0.5), "retyped text: the same readout typed again snaps to it");
+        d.textFromValueFunction = [] (double v) { return v <= 0.0 ? juce::String ("-inf dB") : juce::String (v, 2) + " dB"; };
+        d.valueFromTextFunction = [] (const juce::String& t) { return t.containsIgnoreCase ("inf") ? 0.0 : t.getDoubleValue(); };
+        d.setValue (0.5, juce::dontSendNotification);
+        check (d.valueEntry.applyText ("-inf") && near (d.getValue(), 0.0), "word with a unit: '-inf' matches the readout '-inf dB'");
     }
 
     {
@@ -348,6 +384,23 @@ int main()
         auto* box = knob.valueEntry.getOpenEditor();
         check (box != nullptr && box->getParentComponent() == &ed, "box's parent is the AudioProcessorEditor");
         if (box != nullptr) box->onEscapeKey();
+    }
+
+    {
+        // Word readouts: "Off" at the minimum is accepted when the slider shows it back.
+        Dial dial;
+        dial.setRange (-60.0, 6.0);
+        dial.textFromValueFunction = [] (double v) { return v <= -60.0 ? juce::String ("Off") : juce::String (v, 0) + " dB"; };
+        dial.valueFromTextFunction = [] (const juce::String& t)
+        { return t.trim().equalsIgnoreCase ("off") ? -60.0 : t.getDoubleValue(); };
+        dial.setValue (-12.0, juce::dontSendNotification);
+
+        check (dial.valueEntry.applyText ("Off") && near (dial.getValue(), -60.0), "word readout: 'Off' sets the minimum and returns true");
+        dial.setValue (-12.0, juce::dontSendNotification);
+        check (dial.valueEntry.applyText ("off") && near (dial.getValue(), -60.0), "word readout: 'off' sets the minimum and returns true");
+        dial.setValue (-12.0, juce::dontSendNotification);
+        const bool junk = dial.valueEntry.applyText ("abc");
+        check (! junk && near (dial.getValue(), -12.0), "word readout: 'abc' returns false and leaves the value");
     }
 
     // Closed text boxes are deleted on the next message-loop turn. Let those run now: left for

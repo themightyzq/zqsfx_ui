@@ -65,10 +65,20 @@ public:
     bool applyText (const juce::String& text)
     {
         const auto trimmed = text.trim();
-        if (trimmed.isEmpty() || ! trimmed.containsAnyOf ("0123456789"))
+        if (trimmed.isEmpty())
             return false;
 
         const auto value = slider.getRange().clipValue (slider.getValueFromText (trimmed));
+        if (! trimmed.containsAnyOf ("0123456789"))
+        {
+            // A word readout ("Off", "-inf"): accept it only when the slider shows that same
+            // text back for the value it read (after clipping, so the check sees what would
+            // be set), so garbage like "abc" is still refused.
+            // The readout may carry a unit after the word ("-inf dB" for a typed "-inf").
+            const auto shown = slider.getTextFromValue (value).trim();
+            if (! shown.equalsIgnoreCase (trimmed) && ! shown.startsWithIgnoreCase (trimmed + " "))
+                return false;
+        }
 
         // Nothing changes, so the host sees no gesture either.
         if (juce::approximatelyEqual (value, slider.getValue()))
@@ -145,6 +155,8 @@ public:
         ed.setReturnKeyStartsNewLine (false);
         ed.setJustification (juce::Justification::centred);
         ed.setText (slider.getTextFromValue (slider.getValue()), false);
+        edited = false; // setText (..., false) sends no change, so only the user's typing sets it
+        ed.onTextChange = [this] { edited = true; };
         ed.onReturnKey = [this] { closeEditor (true, true); };
         ed.onEscapeKey = [this] { closeEditor (false, true); };
         ed.onFocusLost = [this] { closeEditor (true, false); };
@@ -205,10 +217,15 @@ private:
         auto keepFocusLost = std::move (closing->onFocusLost);
         auto keepReturn = std::move (closing->onReturnKey);
         auto keepEscape = std::move (closing->onEscapeKey);
+        auto keepTextChange = std::move (closing->onTextChange);
         if (auto* parent = closing->getParentComponent())
             parent->removeChildComponent (closing.get());
 
-        if (apply)
+        // Untouched text is not applied: a readout that rounds ("50 %" at 0.503) or names a
+        // whole span ("Off") would otherwise move the knob when the box is merely opened and
+        // closed, and a stale readout would drag it back against host automation. Anything the
+        // user typed, even the same text, is applied.
+        if (apply && edited)
             applyText (text);
         if (restoreFocus)
             slider.grabKeyboardFocus();
@@ -247,6 +264,7 @@ private:
     juce::RangedAudioParameter* parameter = nullptr;
     const bool ownsListeners;
     std::unique_ptr<juce::TextEditor> editor;
+    bool edited = false;
     std::shared_ptr<int> lifeToken = std::make_shared<int> (0);
     double valueBeforeClick = 0.0;
     bool swallowingPopupClick = false;

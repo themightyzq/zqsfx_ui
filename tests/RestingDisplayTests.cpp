@@ -203,6 +203,99 @@ int main()
                "drawRestingMark leaves the corners transparent");
     }
 
+    {
+        // A target that outlives the clock gets its own text back when the clock goes.
+        juce::Component display, editorLike;
+        editorLike.setDescription ("Editor");
+        ActivityFlag flag;
+        double now = 0.0;
+        {
+            RestClock clock (display, &flag, nullptr);
+            clock.setClockForTesting ([&] { return now; });
+            clock.setShowingForTesting (true);
+            clock.setDescriptionTarget (&editorLike);
+            flag.notePeak (0.5f);
+            clock.poll();
+            now = RestClock::holdSeconds + 1.0;
+            clock.poll();
+            check (editorLike.getDescription() == "No sound", "outliving target: says No sound while resting");
+        }
+        check (editorLike.getDescription() == "Editor", "outliving target: its text comes back when the clock is destroyed");
+    }
+
+    {
+        // setDescriptionTarget: a child carries "No sound", not the display.
+        juce::Component display, child;
+        display.setDescription ("Display");
+        child.setDescription ("Child");
+        ActivityFlag flag;
+        double now = 0.0;
+        RestClock clock (display, &flag, nullptr);
+        clock.setClockForTesting ([&] { return now; });
+        clock.setShowingForTesting (true);
+        clock.setDescriptionTarget (&child);
+        flag.notePeak (0.5f);
+        clock.poll();
+        now = RestClock::holdSeconds + 1.0;
+        clock.poll();
+        check (clock.isResting(), "target: resting after the hold");
+        check (child.getDescription() == "No sound" && display.getDescription() == "Display",
+               "target: silence relabels the child, not the display");
+        flag.notePeak (0.5f);
+        clock.poll();
+        check (child.getDescription() == "Child" && display.getDescription() == "Display",
+               "target: waking restores the child's text");
+    }
+
+    {
+        juce::Component display;
+        display.setDescription ("Display");
+        ActivityFlag flag;
+        double now = 0.0;
+        RestClock clock (display, &flag, nullptr);
+        clock.setClockForTesting ([&] { return now; });
+        clock.setShowingForTesting (true);
+        clock.setDescriptionTarget (nullptr);
+        now = RestClock::holdSeconds + 1.0;
+        clock.poll();
+        check (clock.isResting() && display.getDescription() == "Display", "target nullptr: no description changes");
+    }
+
+    {
+        juce::Component display, first, second;
+        first.setDescription ("First");
+        second.setDescription ("Second");
+        ActivityFlag flag;
+        double now = 0.0;
+        RestClock clock (display, &flag, nullptr);
+        clock.setClockForTesting ([&] { return now; });
+        clock.setShowingForTesting (true);
+        clock.setDescriptionTarget (&first);
+        now = RestClock::holdSeconds + 1.0;
+        clock.poll();
+        check (first.getDescription() == "No sound", "switch: first target is relabelled");
+        clock.setDescriptionTarget (&second);
+        check (first.getDescription() == "First", "switch: changing the target restores the first one");
+        clock.poll();
+        check (second.getDescription() == "No sound", "switch: the new target is relabelled while still resting");
+    }
+
+    {
+        ActivityFlag f;
+        f.notePeak (0.1f);
+        f.notePeak (0.5f);
+        f.notePeak (0.2f);
+        check (f.takePeak() == 0.5f, "takePeak returns the loudest peak since the last call");
+        check (f.takePeak() == 0.0f, "takePeak clears on read");
+
+        // A 10 ms hit between two 4 Hz polls is still returned.
+        ActivityFlag g;
+        g.notePeak (0.0f);
+        g.notePeak (0.8f);
+        g.notePeak (0.0f);
+        check (g.takePeak() == 0.8f, "takePeak: a short burst after silence is still returned");
+    }
+
     std::cout << (failures == 0 ? "ALL PASS" : "FAILURES") << "\n";
     return failures == 0 ? 0 : 1;
 }
